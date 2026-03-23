@@ -56,6 +56,12 @@ public class GlobalExceptionHandler {
         return error(400, ex.getMessage());
     }
 
+    @ExceptionHandler(com.omnib2b.api.core.exception.SubscriptionLimitException.class)
+    public ResponseEntity<Map<String, Object>> handleSubscriptionLimit(com.omnib2b.api.core.exception.SubscriptionLimitException ex) {
+        log.warn("Subscription limit reached: {}", ex.getMessage());
+        return error(403, ex.getMessage());
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleGeneric(Exception ex) {
         log.error("Unexpected error: {}", ex.getMessage(), ex);

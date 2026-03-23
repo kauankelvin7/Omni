@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import { Users, Plus, Copy, Check, Search, Edit2, Trash2, X, AlertCircle } from 'lucide-react';
 import { patientService, Patient, PatientPayload } from '../services/patient';
 
@@ -146,15 +147,21 @@ export const Patients = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Patient | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [subscription, setSubscription] = useState<any>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
     setActionError(null);
     try {
-      setPatients(await patientService.getAll());
+      const [pts, sub] = await Promise.all([
+        patientService.getAll(),
+        import('../services/subscription').then(m => m.subscriptionService.getMe().catch(() => null))
+      ]);
+      setPatients(pts);
+      setSubscription(sub);
     } catch (err) {
       console.error(err);
-      setActionError('Falha ao carregar a lista de pacientes.');
+      setActionError('Falha ao carregar dados.');
     } finally {
       setLoading(false);
     }
@@ -174,6 +181,9 @@ export const Patients = () => {
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const sliced = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 
+  const isStarter = !subscription || subscription.planName === 'TRIAL' || subscription.planName === 'STARTER';
+  const limitReached = isStarter && patients.length >= 100;
+
   const handleSave = async (payload: PatientPayload) => {
     setActionError(null);
     try {
@@ -183,9 +193,10 @@ export const Patients = () => {
         await patientService.create(payload);
       }
       await load();
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      setActionError('Falha ao salvar paciente.');
+      const msg = err.response?.data?.message || 'Falha ao salvar paciente.';
+      setActionError(msg);
     }
   };
 
@@ -213,12 +224,28 @@ export const Patients = () => {
       <div className="header">
         <div>
           <h1>Pacientes</h1>
-          <p style={{ color: 'var(--linear-text-secondary)', fontSize: 14, marginTop: 4 }}>
-            {patients.length} paciente{patients.length !== 1 ? 's' : ''} cadastrado{patients.length !== 1 ? 's' : ''}
-          </p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 4 }}>
+            <p style={{ color: 'var(--linear-text-secondary)', fontSize: 14 }}>
+              {patients.length} paciente{patients.length !== 1 ? 's' : ''} cadastrado{patients.length !== 1 ? 's' : ''}
+            </p>
+            {isStarter && (
+              <span style={{ 
+                fontSize: 12, 
+                padding: '2px 8px', 
+                borderRadius: 4, 
+                background: limitReached ? 'rgba(239, 68, 68, 0.1)' : 'rgba(255, 255, 255, 0.05)',
+                color: limitReached ? '#EF4444' : 'var(--linear-text-muted)',
+                border: `1px solid ${limitReached ? 'rgba(239, 68, 68, 0.2)' : 'rgba(255, 255, 255, 0.1)'}`
+              }}>
+                Limite: {patients.length}/100
+              </span>
+            )}
+          </div>
         </div>
         <button
           className="btn btn-primary"
+          disabled={limitReached}
+          title={limitReached ? "Limite do plano Starter atingido (100 pacientes)" : ""}
           onClick={() => {
             setEditing(null);
             setModalOpen(true);
@@ -227,6 +254,23 @@ export const Patients = () => {
           <Plus size={16} /> Novo Paciente
         </button>
       </div>
+
+      {limitReached && (
+        <div className="glass-card" style={{ marginBottom: 24, borderLeft: '4px solid #F59E0B', background: 'rgba(245, 158, 11, 0.05)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <AlertCircle size={20} style={{ color: '#F59E0B' }} />
+            <div>
+              <p style={{ fontWeight: 600, fontSize: 14 }}>Limite de pacientes atingido</p>
+              <p style={{ fontSize: 13, color: 'var(--linear-text-secondary)' }}>
+                Você atingiu o limite de 100 pacientes do seu plano. Para continuar adicionando, faça o upgrade para o plano Pro.
+              </p>
+            </div>
+            <Link to="/settings/billing" className="btn btn-primary" style={{ marginLeft: 'auto', padding: '6px 12px', fontSize: 12 }}>
+              Fazer Upgrade
+            </Link>
+          </div>
+        </div>
+      )}
 
       {actionError && (
         <div className="form-error" style={{ marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '8px' }}>

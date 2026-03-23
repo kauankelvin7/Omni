@@ -1,14 +1,24 @@
 import { useEffect, useState } from 'react';
-import { BarChart3, TrendingUp, TrendingDown, Calendar, CheckCircle2, XCircle, Loader2 } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { BarChart3, TrendingUp, TrendingDown, Calendar, CheckCircle2, XCircle, Loader2, Star } from 'lucide-react';
 import { appointmentService, Appointment } from '../services/appointment';
 
 export const Reports = () => {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [subscription, setSubscription] = useState<any>(null);
 
   useEffect(() => {
-    appointmentService.getAll().then(setAppointments).finally(() => setLoading(false));
+    Promise.all([
+      appointmentService.getAll(),
+      import('../services/subscription').then(m => m.subscriptionService.getMe().catch(() => null))
+    ]).then(([apts, sub]) => {
+      setAppointments(apts);
+      setSubscription(sub);
+    }).finally(() => setLoading(false));
   }, []);
+
+  const isPro = subscription && (subscription.planName === 'PRO' || subscription.planName === 'CLINIC_PLUS');
 
   const now = new Date();
   const thisMonth = now.getMonth();
@@ -61,12 +71,20 @@ export const Reports = () => {
         </div>
       </div>
 
-      <div className="dashboard-grid" style={{ marginBottom: 40 }}>
-        {metrics.map((m) => {
+      <div className="dashboard-grid" style={{ marginBottom: 40, position: 'relative' }}>
+        {metrics.map((m, idx) => {
           const d = delta(m.value, m.prev);
           const up = d >= 0;
+          const restricted = !isPro && idx >= 2; // Gating: confirmed and cancelled are fine, but rate and ? wait.
+          // Let's gate: 0, 1 are basic. 2, 3 are "Advanced"
+          
           return (
-            <div key={m.label} className="glass-card stat-card dense">
+            <div key={m.label} className="glass-card stat-card dense" style={{ 
+              filter: restricted ? 'blur(4px)' : 'none',
+              pointerEvents: restricted ? 'none' : 'auto',
+              opacity: restricted ? 0.6 : 1,
+              transition: 'all 0.3s ease'
+            }}>
               <div className="stat-icon-wrapper" style={{ color: m.color, borderColor: `${m.color}33` }}>
                 {m.icon}
               </div>
@@ -81,6 +99,32 @@ export const Reports = () => {
             </div>
           );
         })}
+        
+        {!isPro && (
+          <div style={{
+            position: 'absolute',
+            top: 0, left: 0, right: 0, bottom: 0,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            zIndex: 10, pointerEvents: 'none'
+          }}>
+            <div className="glass-card" style={{ 
+              padding: '20px 32px', 
+              textAlign: 'center', 
+              pointerEvents: 'auto',
+              boxShadow: '0 20px 50px rgba(0,0,0,0.5)',
+              border: '1px solid rgba(255,255,255,0.1)'
+            }}>
+              <Star size={24} style={{ color: '#F59E0B', marginBottom: 12 }} />
+              <h3 style={{ fontSize: 16, marginBottom: 8 }}>Relatórios Avançados</h3>
+              <p style={{ fontSize: 13, color: 'var(--linear-text-secondary)', marginBottom: 20, maxWidth: 240 }}>
+                Faça o upgrade para o plano Pro para desbloquear métricas detalhadas e taxa de conversão.
+              </p>
+              <Link to="/settings/billing" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }}>
+                Ver Planos
+              </Link>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Simple bar chart */}

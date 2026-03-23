@@ -17,6 +17,7 @@ public class PatientService {
     private final PatientRepository patientRepository;
     private final AppointmentRepository appointmentRepository;
     private final SecurityLogService securityLogService;
+    private final com.omnib2b.api.core.tenant.service.SubscriptionGatingService gatingService;
 
     @Transactional(readOnly = true)
     public List<Patient> findAll() {
@@ -31,6 +32,11 @@ public class PatientService {
 
     @Transactional
     public Patient create(Patient patient) {
+        if (gatingService != null && !gatingService.canAddPatient(com.omnib2b.api.core.tenant.TenantContext.getCurrentTenant())) {
+            throw new com.omnib2b.api.core.exception.SubscriptionLimitException(
+                "Limite de 100 pacientes atingido para o plano Starter. Por favor, faça o upgrade para o plano Pro para continuar."
+            );
+        }
         return patientRepository.save(patient);
     }
 
