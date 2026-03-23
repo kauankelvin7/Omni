@@ -2,30 +2,23 @@ spring:
   application:
     name: Omni B2B API
   datasource:
-    url: ${SPRING_DATASOURCE_URL}
-    username: ${SPRING_DATASOURCE_USERNAME}
-    password: ${SPRING_DATASOURCE_PASSWORD}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/omnidb}
+    username: ${SPRING_DATASOURCE_USERNAME:omni_user}
+    password: ${SPRING_DATASOURCE_PASSWORD:omni_password}
     driver-class-name: org.postgresql.Driver
-    hikari:
-      connection-timeout: 30000
-      maximum-pool-size: 5
-      data-source-properties:
-        sslmode: require
-        sslfactory: org.postgresql.ssl.NonValidatingFactory
   jpa:
     hibernate:
       ddl-auto: update
-    show-sql: true
+    show-sql: false
     properties:
       hibernate:
-        format_sql: true
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
 server:
   port: ${PORT:8080}
 
 jwt:
-  secret: ${JWT_SECRET}
+  secret: ${JWT_SECRET:omnib2b-super-secret-key-that-needs-to-be-changed}
   expiration: ${JWT_EXPIRATION:86400000}
 
 master:
