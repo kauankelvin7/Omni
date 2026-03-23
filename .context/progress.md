@@ -31,3 +31,9 @@ O sistema atende todos os requisitos do Sprint: Master panel online, UI responsi
 - [x] Receita Total calculada corretamente (Soma de ACTIVE + CANCELLED).
 - [x] Média por Clínica corrigida (MRR / Count ACTIVE).
 - [x] Formatação de datas BRL no painel financeiro Master.
+
+### Deploy Setup (Render, Vercel, Supabase)
+- [x] application.yml configurado com variáveis de ambiente para produção.
+- [x] .env.example criados para o frontend e backend com as chaves corretas.
+- [x] CORS habilitado via variáveis de ambiente no WebMvcConfig.java.
+- [x] Guia de deploy em nuvem detalhado gerado em `docs/DEPLOY-RENDER.md`.

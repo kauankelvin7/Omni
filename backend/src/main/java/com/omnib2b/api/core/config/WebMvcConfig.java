@@ -3,6 +3,7 @@ package com.omnib2b.api.core.config;
 import com.omnib2b.api.core.interceptor.JwtInterceptor;
 import com.omnib2b.api.master.interceptor.MasterAuthInterceptor;
 import com.omnib2b.api.master.interceptor.RateLimitInterceptor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
@@ -15,6 +16,9 @@ public class WebMvcConfig implements WebMvcConfigurer {
     private final MasterAuthInterceptor masterAuthInterceptor;
     private final RateLimitInterceptor rateLimitInterceptor;
 
+    @Value("${allowed.origins:http://localhost:5173}")
+    private String allowedOrigins;
+
     public WebMvcConfig(JwtInterceptor jwtInterceptor,
                         MasterAuthInterceptor masterAuthInterceptor,
                         RateLimitInterceptor rateLimitInterceptor) {
@@ -26,7 +30,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOrigins("http://localhost:5173")
+                .allowedOrigins(allowedOrigins)
                 .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
                 .allowedHeaders("Authorization", "Content-Type")
                 .allowCredentials(true)

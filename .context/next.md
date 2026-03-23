@@ -13,6 +13,7 @@
 - [x] Deploy Documentado (`DEPLOY.md`, `render.yaml`)
 
 ## 📋 Backlog (Futuro)
+- [ ] Executar passo a passo do `docs/DEPLOY-RENDER.md` para colocar o sistema no ar nas plataformas em nuvem (Render, Vercel, Supabase).
 - [ ] Integração Stripe ou Pagar.me webhook nativo no Spring Boot.
 - [ ] Row-Level Security hardcore no PostgreSQL para fallback extra.
 - [ ] Testes CI/CD (JUnit e Cypress no GitHub Actions).
