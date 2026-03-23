@@ -1,0 +1,37 @@
+services:
+  - type: web
+    name: omni-backend
+    env: java
+    buildCommand: cd backend && ./mvnw package -DskipTests
+    startCommand: java -jar backend/target/*.jar
+    envVars:
+      - key: JWT_SECRET
+        generateValue: true
+      - key: SEED_SECRET
+        generateValue: true
+      - key: SPRING_DATASOURCE_URL
+        fromDatabase:
+          name: omni-postgres
+          property: connectionString
+      - key: SPRING_DATASOURCE_USERNAME
+        fromDatabase:
+          name: omni-postgres
+          property: user
+      - key: SPRING_DATASOURCE_PASSWORD
+        fromDatabase:
+          name: omni-postgres
+          property: password
+
+  - type: web
+    name: omni-frontend
+    env: static
+    buildCommand: cd frontend && npm ci && npm run build
+    staticPublishPath: frontend/dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+
+databases:
+  - name: omni-postgres
+    plan: free

@@ -1,0 +1,48 @@
+# Dependencies
+node_modules/
+venv/
+.venv/
+env/
+*.pyc
+*.pyo
+__pycache__/
+
+# Build outputs
+target/
+dist/
+build/
+*.jar
+*.war
+backend/target/
+frontend/dist/
+
+# Environment
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+
+# Database & Data
+docker/postgres/data/
+*.db
+*.sqlite
+
+# Logs
+*.log
+logs/
+backend/logs/
+
+# IDE & OS
+.idea/
+.vscode/
+*.swp
+*.swo
+*.iml
+.DS_Store
+Thumbs.db
+
+# Project Specific
+bots/prospector/data/leads.json
+!bots/prospector/data/.gitkeep

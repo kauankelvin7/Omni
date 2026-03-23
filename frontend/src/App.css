@@ -1,0 +1,30 @@
+/* ======================== App.css ======================== */
+
+#root {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  
+  /* Puxando as cores do nosso Design System */
+  background-color: var(--linear-bg-main);
+  color: var(--linear-text-primary);
+  
+  /* Garante que o conteúdo não vaze da tela criando barras de rolagem indesejadas */
+  overflow-x: hidden;
+}
+
+/* Opcional: Se você for usar ícones de carregamento globais, 
+   pode manter essa classe de animação genérica aqui */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}

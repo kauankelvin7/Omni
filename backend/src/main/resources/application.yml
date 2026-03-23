@@ -1,0 +1,28 @@
+spring:
+  application:
+    name: Omni B2B API
+  datasource:
+    url: jdbc:postgresql://localhost:5432/omni_db
+    username: omni_user
+    password: omni_password
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+server:
+  port: 8080
+
+jwt:
+  secret: ${JWT_SECRET:omnib2b-super-secret-key-that-needs-to-be-secure-for-hs256-signing}
+  expiration: ${JWT_EXPIRATION:86400000}
+
+master:
+  seed-secret: ${SEED_SECRET:omni-dev-seed-secret}
+  password: ${MASTER_PASSWORD:}
+  email: ${MASTER_EMAIL:kauan@omnib2b.com}

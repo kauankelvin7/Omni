@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-omni_db}
+      POSTGRES_USER: ${POSTGRES_USER:-omni_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-omni_password}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    networks:
+      - omni-network
+
+  backend:
+    build: ./backend
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-omni_db}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-omni_user}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-omni_password}
+      JWT_SECRET: ${JWT_SECRET}
+      SEED_SECRET: ${SEED_SECRET}
+      MASTER_PASSWORD: ${MASTER_PASSWORD}
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+    restart: unless-stopped
+    networks:
+      - omni-network
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - omni-network
+
+volumes:
+  pgdata:
+
+networks:
+  omni-network:
+    driver: bridge
