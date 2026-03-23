@@ -18,9 +18,11 @@ export const Login = () => {
     
     try {
       const response = await authService.login({ email, password });
-      // TODO (Segurança futura): Mover para HttpOnly Cookies quando o backend Spring Boot estiver finalizado
       localStorage.setItem('jwt_token', response.token);
-      navigate('/dashboard');
+      // Smart redirect: go to intended route if saved, otherwise dashboard
+      const redirectTo = sessionStorage.getItem('redirectAfterLogin') || '/dashboard';
+      sessionStorage.removeItem('redirectAfterLogin');
+      navigate(redirectTo);
     } catch (err) {
       console.error(err);
       setError('Credenciais inválidas. Verifique seu e-mail e senha.');

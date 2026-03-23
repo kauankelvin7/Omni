@@ -1,9 +1,15 @@
 # Omni B2B
 
+![Produção Backend (Render)](https://img.shields.io/badge/Render%20Free%20API-Online-brightgreen?style=flat&logo=render)
+![Produção Frontend (Vercel)](https://img.shields.io/badge/Vercel%20SPA-Online-black?style=flat&logo=vercel)
+![Status Base de Dados](https://img.shields.io/badge/Supabase%20PostgreSQL-Sa--East--1-3ecf8e?style=flat&logo=supabase)
+![Arquitetura](https://img.shields.io/badge/Architecture-Multi--Tenant-blueviolet?style=flat)
+
 > Sistema de gestão e automação para clínicas.
 > Reduz faltas de pacientes com confirmações automáticas via Telegram e painel administrativo completo.
 
 **Desenvolvido por Kauan Kelvin**
+
 
 ## Funcionalidades
 

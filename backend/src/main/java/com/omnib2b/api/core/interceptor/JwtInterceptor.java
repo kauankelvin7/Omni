@@ -5,6 +5,7 @@ import com.omnib2b.api.core.tenant.TenantContext;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.MDC;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
@@ -21,6 +22,9 @@ public class JwtInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+        // Assign unique requestId to every request for log correlation
+        MDC.put("requestId", UUID.randomUUID().toString().substring(0, 8));
+
         if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
             return true;
         }
@@ -37,9 +41,14 @@ public class JwtInterceptor implements HandlerInterceptor {
         try {
             Claims claims = jwtService.parseToken(token);
             String tenantIdStr = claims.get("tenant_id", String.class);
-            
+            String userId = claims.getSubject();
+
             if (tenantIdStr != null) {
                 TenantContext.setCurrentTenant(UUID.fromString(tenantIdStr));
+                MDC.put("tenantId", tenantIdStr.substring(0, 8));
+            }
+            if (userId != null) {
+                MDC.put("userId", userId.length() > 8 ? userId.substring(0, 8) : userId);
             }
 
             return true;
@@ -51,7 +60,7 @@ public class JwtInterceptor implements HandlerInterceptor {
 
     @Override
     public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) {
-        // Step 4: Automatical Context clearance logic
         TenantContext.clear();
+        MDC.clear();
     }
 }

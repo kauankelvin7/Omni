@@ -6,6 +6,14 @@ spring:
     username: ${SPRING_DATASOURCE_USERNAME:omni_user}
     password: ${SPRING_DATASOURCE_PASSWORD:omni_password}
     driver-class-name: org.postgresql.Driver
+    hikari:
+      connection-timeout: 30000
+      maximum-pool-size: 3
+      minimum-idle: 1
+      idle-timeout: 300000
+      max-lifetime: 1200000
+      keepalive-time: 120000
+      initialization-fail-timeout: 60000
   jpa:
     hibernate:
       ddl-auto: update
@@ -16,6 +24,10 @@ spring:
 
 server:
   port: ${PORT:8080}
+  compression:
+    enabled: true
+    mime-types: application/json,text/html,text/plain
+    min-response-size: 1024
 
 jwt:
   secret: ${JWT_SECRET:omnib2b-super-secret-key-that-needs-to-be-changed}
@@ -28,3 +40,7 @@ master:
 
 allowed:
   origins: ${ALLOWED_ORIGINS:http://localhost:5173}
+
+logging:
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%level] [reqId=%X{requestId}] [user=%X{userId}] [tenant=%X{tenantId}] %logger{36} - %msg%n"

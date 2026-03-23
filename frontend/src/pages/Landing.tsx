@@ -67,7 +67,41 @@ export const Landing = () => {
           padding: '0 24px',
         }}
       >
-        <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 64 }}>
+        {/* Banner de Cold Start */}
+        <div id="server-starting-banner" style={{
+          position: 'absolute', top: 0, left: 0, right: 0,
+          background: 'linear-gradient(90deg, #5E6AD2, #7B85E0)', color: 'white',
+          textAlign: 'center', padding: '6px', fontSize: 13, fontWeight: 500,
+          display: 'none', alignItems: 'center', justifyContent: 'center', gap: 8,
+          transform: 'translateY(-100%)', transition: 'transform 0.4s', zIndex: -1
+        }}>
+          <style>{`@keyframes spin { 100% { transform: rotate(360deg); } }`}</style>
+          <div style={{ width: 14, height: 14, borderRadius: '50%', border: '2px solid rgba(255,255,255,0.3)', borderTopColor: 'white', animation: 'spin 1s linear infinite' }} />
+          Iniciando servidor na nuvem... por favor aguarde alguns segundos
+        </div>
+        <script dangerouslySetInnerHTML={{__html: `
+          setTimeout(() => {
+            fetch('${import.meta.env.VITE_API_URL || "https://omni-backend-7vgd.onrender.com"}/health')
+              .then(res => {
+                if(!res.ok) throw new Error();
+              })
+              .catch(() => {
+                const b = document.getElementById('server-starting-banner');
+                if(b) { b.style.display = 'flex'; setTimeout(() => b.style.transform = 'translateY(0)', 50); }
+                const interval = setInterval(() => {
+                  fetch('${import.meta.env.VITE_API_URL || "https://omni-backend-7vgd.onrender.com"}/health')
+                    .then(res => {
+                      if(res.ok) {
+                        clearInterval(interval);
+                        if(b) { b.style.transform = 'translateY(-100%)'; setTimeout(() => b.style.display = 'none', 400); }
+                      }
+                    }).catch(()=>{});
+                }, 3000);
+              });
+          }, 2000);
+        `}} />
+
+        <div style={{ maxWidth: 1200, margin: scrolled ? '0 auto' : 'auto auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 64, transition: 'padding 0.3s', paddingTop: scrolled ? 0 : 6 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 700, fontSize: 18 }}>
             <Boxes size={24} style={{ color: '#5E6AD2' }} />
             Omni B2B

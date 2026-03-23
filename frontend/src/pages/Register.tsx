@@ -47,9 +47,16 @@ export const Register = () => {
       });
       setSuccess(true);
       setTimeout(() => navigate('/login'), 3000);
-    } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Erro ao criar conta. Tente novamente.';
-      setError(msg);
+    } catch (err: any) {
+      if (err.response?.status === 409) {
+        setError('Este email já está em uso por outra clínica.');
+      } else if (err.response?.status === 400 || err.response?.data?.message) {
+        setError(err.response?.data?.message || 'Dados inválidos. Verifique as informações fornecidas e tente novamente.');
+      } else if (err.message === 'Network Error' || err.code === 'ECONNABORTED') {
+        setError('O servidor demorou a responder. Ele pode estar acordando. Tente novamente em 30 segundos.');
+      } else {
+        setError('Erro ao criar conta. O servidor pode estar indisponível no momento.');
+      }
     } finally {
       setLoading(false);
     }
@@ -75,6 +82,37 @@ export const Register = () => {
 
   return (
     <div className="auth-layout">
+      {/* Banner de Cold Start (Render Free) */}
+      <div id="register-server-banner" style={{
+        position: 'absolute', top: 0, left: 0, right: 0,
+        background: 'linear-gradient(90deg, #5E6AD2, #7B85E0)', color: 'white',
+        textAlign: 'center', padding: '6px', fontSize: 13, fontWeight: 500,
+        display: 'none', alignItems: 'center', justifyContent: 'center', gap: 8,
+        transform: 'translateY(-100%)', transition: 'transform 0.4s', zIndex: 9999
+      }}>
+        <style>{`@keyframes spin { 100% { transform: rotate(360deg); } }`}</style>
+        <div style={{ width: 14, height: 14, borderRadius: '50%', border: '2px solid rgba(255,255,255,0.3)', borderTopColor: 'white', animation: 'spin 1s linear infinite' }} />
+        Iniciando servidor na nuvem... por favor aguarde alguns segundos
+      </div>
+      <script dangerouslySetInnerHTML={{__html: `
+        setTimeout(() => {
+          fetch('${import.meta.env.VITE_API_URL || "https://omni-backend-7vgd.onrender.com"}/health')
+            .catch(() => {
+              const b = document.getElementById('register-server-banner');
+              if(b) { b.style.display = 'flex'; setTimeout(() => b.style.transform = 'translateY(0)', 50); }
+              const interval = setInterval(() => {
+                fetch('${import.meta.env.VITE_API_URL || "https://omni-backend-7vgd.onrender.com"}/health')
+                  .then(res => {
+                    if(res.ok) {
+                      clearInterval(interval);
+                      if(b) { b.style.transform = 'translateY(-100%)'; setTimeout(() => b.style.display = 'none', 400); }
+                    }
+                  }).catch(()=>{});
+              }, 3000);
+            });
+        }, 1000);
+      `}} />
+
       <div className="auth-bg-glow" />
       <div className="auth-card glass-card">
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
