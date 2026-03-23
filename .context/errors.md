@@ -194,3 +194,29 @@ Confirmado via `curl` (método OPTIONS) que a API agora retorna erro 200 para a 
 3. Executado update manual no banco para corrigir registros existentes com preço zerado.
 4. Formatado as datas de ISO para PT-BR no frontend `MasterRevenue.tsx`.
 **Como evitar:** Sempre que houver uma transição de plano, garantir que todas as dimensões financeiras (preço, status, período) sejam persistidas em uma única transação ou operação atômica.
+
+---
+
+## Erro 014: Vercel 404 em Single Page Apps (Rotas do React)
+
+**Data:** 2026-03-23
+**Contexto:** SPA compilada com Vite e mandada para Vercel.
+**Sintoma:** Tudo funciona via navegação por botão, mas acessar `omni-b2b.vercel.app/dashboard` direto pela URL resulta em página 404 nativa da Vercel.
+**Causa raiz:** O roteamento React ocorre no client-side (`index.html`). O servidor edge Vercel procura o arquivo `/dashboard.html` e falha.
+**Solução:** Foi criado `vercel.json` estrito na raiz de `/frontend` que faz um Rewrite "catch-all" redirecionando `/` e todas sub-rotas para o `/index.html`.
+**Como evitar:** Todo setup standard PWA/SPA em nuvens puras sem WebServer customizado precisa declarar Rewrite Rules na hospedagem.
+
+---
+
+## Erro 015: Render Web Service "Cold Start" Timeouts
+
+**Data:** 2026-03-23
+**Contexto:** Login matinal / Cadastro primeira vez do dia (Render Free Tier API).
+**Sintoma:** O Spinner de Loading trava, o usuário envia duas vezes o formulário. Eventualmente o Axios devolve `Network Error`.
+**Causa raiz:** Após inatividade de 15m o dyno do Render colapsa/dorme. Na requisição, ele leva ~~ 45s para realizar setup completo JVM Sprint Boot e abrir conexões de DB, superando o timeout padrão do cliente/network.
+**Solução:** Implementado Barramento PubSub `LoadingContext` React interceptando todos Axios requests in-flight para prender botões da UI, seguido da interceptação do timeout pra exibir Banners informativos em caso de lentidão: "Iniciando servidor na nuvem, aguarde uns segundos". Um endpoint `/health` garante que haja ping.
+**Como evitar:** Em planos de hospedagem gratuita, abrace conscientemente em código a latência e forneça *visual cues/feedback loops* para evitar que o usuário acredite em quebra sistêmica.
+
+---
+
+*(O arquivo errors.md é vivo e todo erro severo deve ser devidamente preenchido aqui para futuras refatorações)*

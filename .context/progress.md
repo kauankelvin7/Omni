@@ -37,3 +37,12 @@ O sistema atende todos os requisitos do Sprint: Master panel online, UI responsi
 - [x] .env.example criados para o frontend e backend com as chaves corretas.
 - [x] CORS habilitado via variáveis de ambiente no WebMvcConfig.java.
 - [x] Guia de deploy em nuvem detalhado gerado em `docs/DEPLOY-RENDER.md`.
+
+---
+## Auditoria B2B de Produção (Março 2026)
+- **Correções Críticas Serverless**: `vercel.json` implementado para roteamento SPA da Vercel (evitando erros 404). Backend ganhou `HealthController` e otimização JVM (`-XX:MaxRAMPercentage=75.0`) limitando estouro no Render Free Tier.
+- **Resiliência de API**: Implementado cache em frontend React (via interceptor Axios) de 30s nos requests GET. Além de suporte à compressão `gzip` padrão e pools baseados em `Hikari` (timeout 30s).
+- **UX de Loading e Erros**: Sistema englobado por `LoadingProvider` e `ErrorBoundary`. Regras rígidas de retry em cadastros (retornando as exatas falhas como "email já em uso") e Banners informativos em `/register` ensinando o usuário sobre o lag inicial de *Cold Starts* de provedores PaaS Serverless.
+- **Logs Estruturados e Arquitetura**: `JwtInterceptor` formatado com `MDC` injetando UUID e TenantId em todos os outputs. Adicionado o arquivo `CHANGELOG.md` e guia `PRODUCTION.md`. Redirecionamento de auth com sessionStorage.
+
+*Tudo concluído, validado e mergeado para master.*

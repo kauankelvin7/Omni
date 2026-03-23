@@ -22,9 +22,6 @@ public class JwtInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
-        // Assign unique requestId to every request for log correlation
-        MDC.put("requestId", UUID.randomUUID().toString().substring(0, 8));
-
         if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
             return true;
         }
@@ -61,6 +58,5 @@ public class JwtInterceptor implements HandlerInterceptor {
     @Override
     public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) {
         TenantContext.clear();
-        MDC.clear();
     }
 }

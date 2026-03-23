@@ -32,4 +32,5 @@ Todo Repository deve filtrar por tenant_id obrigatoriamente. Isolamento garantid
 - ✅ **Painel Master (Super Admin)** ativo em `/master/*` com rotas protegidas pelo papel `SUPER_ADMIN`.
 - ✅ **Segurança Hardened**: Proteção contra bots (IP Rate Limiting), Security Headers ativos, pentest OK.
 - ✅ **Compliance LGPD**: Logs de deleção estritos. 
-- ✅ **Infraestrutura Cloud-Ready**: Arquivos de deployment (`docker-compose.prod.yml`, `render.yaml`) finalizados. O sistema está pronto para Produção.
+- ✅ **Infraestrutura Cloud-Ready**: Arquivos de deployment (`docker-compose.prod.yml`, `render.yaml`) finalizados.
+- ✅ **Auditoria de Produção (Mar/26)**: Rotas Vercel SPA corrigidas (`vercel.json`), Render Timeout mitigating (banner de cold start), cache de requisições GET (Axios interceptor 30s), logging MDC, ErrorBoundaries React. Sistema em **Produção e Estável**.

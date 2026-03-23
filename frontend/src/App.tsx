@@ -7,6 +7,7 @@ import './index.css';
 import { ToastProvider } from './components/Toast';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { LoadingProvider, loadingBus } from './components/LoadingContext';
+import { ColdStartBanner } from './components/layout/ColdStartBanner';
 import api from './services/api';
 
 // Wire loadingBus → LoadingContext
@@ -190,6 +191,7 @@ function App() {
                 </div>
               )}
               <Navigation />
+              <ColdStartBanner />
               <Suspense fallback={<PageSpinner />}>
                 <Routes>
                   {/* Public Routes */}

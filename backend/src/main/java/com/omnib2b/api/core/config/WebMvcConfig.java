@@ -1,6 +1,7 @@
 package com.omnib2b.api.core.config;
 
 import com.omnib2b.api.core.interceptor.JwtInterceptor;
+import com.omnib2b.api.core.interceptor.MdcInterceptor;
 import com.omnib2b.api.master.interceptor.MasterAuthInterceptor;
 import com.omnib2b.api.master.interceptor.RateLimitInterceptor;
 import org.springframework.beans.factory.annotation.Value;
@@ -15,16 +16,19 @@ public class WebMvcConfig implements WebMvcConfigurer {
     private final JwtInterceptor jwtInterceptor;
     private final MasterAuthInterceptor masterAuthInterceptor;
     private final RateLimitInterceptor rateLimitInterceptor;
+    private final MdcInterceptor mdcInterceptor;
 
     @Value("${allowed.origins:http://localhost:5173}")
     private String allowedOrigins;
 
     public WebMvcConfig(JwtInterceptor jwtInterceptor,
                         MasterAuthInterceptor masterAuthInterceptor,
-                        RateLimitInterceptor rateLimitInterceptor) {
+                        RateLimitInterceptor rateLimitInterceptor,
+                        MdcInterceptor mdcInterceptor) {
         this.jwtInterceptor = jwtInterceptor;
         this.masterAuthInterceptor = masterAuthInterceptor;
         this.rateLimitInterceptor = rateLimitInterceptor;
+        this.mdcInterceptor = mdcInterceptor;
     }
 
     @Override
@@ -39,7 +43,11 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        // Rate limiting — must be first
+        // Logging context — must be first to catch all requests
+        registry.addInterceptor(mdcInterceptor)
+                .addPathPatterns("/**");
+
+        // Rate limiting — must be second
         registry.addInterceptor(rateLimitInterceptor)
                 .addPathPatterns("/auth/login", "/master/auth/login");
 

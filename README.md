@@ -10,6 +10,14 @@
 
 **Desenvolvido por Kauan Kelvin**
 
+---
+
+### 📖 Documentação de Produção
+- [🚀 Guia de Operação (PRODUCTION.md)](./docs/PRODUCTION.md)
+- [📊 Guia de Monitoramento (MONITORING.md)](./docs/MONITORING.md)
+- [📜 Changelog](./CHANGELOG.md)
+
+---
 
 ## Funcionalidades
 
