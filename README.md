@@ -1,8 +1,8 @@
 # Omni B2B
 
-![Produção Backend (Render)](https://img.shields.io/badge/Render%20Free%20API-Online-brightgreen?style=flat&logo=render)
-![Produção Frontend (Vercel)](https://img.shields.io/badge/Vercel%20SPA-Online-black?style=flat&logo=vercel)
-![Status Base de Dados](https://img.shields.io/badge/Supabase%20PostgreSQL-Sa--East--1-3ecf8e?style=flat&logo=supabase)
+![Backend](https://img.shields.io/badge/Backend-Java%2017%20%2B%20Spring%20Boot-6DB33F?style=flat&logo=springboot)
+![Frontend](https://img.shields.io/badge/Frontend-React%2018%20%2B%20TypeScript-61DAFB?style=flat&logo=react)
+![Database](https://img.shields.io/badge/Database-PostgreSQL%2016-4169E1?style=flat&logo=postgresql)
 ![Arquitetura](https://img.shields.io/badge/Architecture-Multi--Tenant-blueviolet?style=flat)
 
 > Sistema de gestão e automação para clínicas.
@@ -113,7 +113,7 @@ chmod +x start.sh && ./start.sh
 
 - **Frontend:** http://localhost:5173
 - **API:** http://localhost:8080
-- **Credenciais padrão:** admin@clinicateste.com / admin123
+- **Credenciais locais de desenvolvimento:** `admin@clinicateste.com` / `admin123` — não reutilize estas credenciais em produção.
 
 ## Estrutura do projeto
 
