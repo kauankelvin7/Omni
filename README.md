@@ -52,8 +52,8 @@
 ### 1. Clone o repositório
 
 ```bash
-git clone https://github.com/kauankelvin/omni-b2b
-cd omni-b2b
+git clone https://github.com/kauankelvin7/Omni.git
+cd Omni
 ```
 
 ### 2. Configure as variáveis de ambiente
