@@ -4,6 +4,13 @@ import com.omnib2b.api.domain.Patient;
 import com.omnib2b.api.service.PatientService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.CacheControl;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+import com.omnib2b.api.service.TelegramLinkService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -14,8 +21,9 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class PatientController {
     private final PatientService patientService;
+    private final TelegramLinkService telegramLinkService;
 
-    record TelegramLinkRequest(Long chatId) {}
+    record RedeemLinkRequest(@NotBlank String token, @NotNull @Positive Long chatId) {}
 
     @GetMapping
     public List<Patient> list() {
@@ -44,8 +52,16 @@ public class PatientController {
         patientService.delete(id);
     }
 
-    @PatchMapping("/{id}/telegram")
-    public Patient linkTelegram(@PathVariable UUID id, @RequestBody TelegramLinkRequest body) {
-        return patientService.updateTelegramChatId(id, body.chatId());
+    @PostMapping("/{id}/telegram-link")
+    public ResponseEntity<TelegramLinkService.IssuedLink> issueTelegramLink(@PathVariable UUID id) {
+        return ResponseEntity.ok()
+                .cacheControl(CacheControl.noStore())
+                .body(telegramLinkService.issue(id));
+    }
+
+    @PostMapping("/telegram/redeem")
+    public ResponseEntity<Void> redeemTelegramLink(@Valid @RequestBody RedeemLinkRequest body) {
+        telegramLinkService.redeem(body.token(), body.chatId());
+        return ResponseEntity.noContent().cacheControl(CacheControl.noStore()).build();
     }
 }
