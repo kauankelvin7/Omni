@@ -7,7 +7,7 @@ import './index.css';
 import { ToastProvider } from './components/Toast';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { LoadingProvider, loadingBus } from './components/LoadingContext';
-import api from './services/api';
+import api, { invalidateCache } from './services/api';
 
 // Wire loadingBus → LoadingContext
 let _loadingIncrement: (() => void) | null = null;
@@ -90,6 +90,8 @@ const Navigation = () => {
 
   const handleLogout = () => {
     localStorage.removeItem('jwt_token');
+    sessionStorage.removeItem('jwt_refresh_token');
+    invalidateCache();
     window.location.href = '/login';
   };
 
