@@ -58,6 +58,55 @@ jobs:
         run: |
           chmod +x mvnw
           ./mvnw -B --no-transfer-progress clean verify
+  legacy-schema-migration:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: omni_user
+          POSTGRES_PASSWORD: omni_password
+          POSTGRES_DB: omni_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U omni_user -d omni_db"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    env:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/omni_db
+      SPRING_DATASOURCE_USERNAME: omni_user
+      SPRING_DATASOURCE_PASSWORD: omni_password
+      JWT_SECRET: test-only-not-for-deployment-0123456789abcdef0123456789abcdef
+      MASTER_PASSWORD: test-only-master-password
+      SEED_SECRET: test-only-seed-secret
+      ALLOWED_ORIGINS: http://localhost:5173
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: maven
+          cache-dependency-path: backend/pom.xml
+      - name: Install PostgreSQL client and populate legacy schema
+        working-directory: .
+        env:
+          PGPASSWORD: omni_password
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client
+          psql -h localhost -U omni_user -d omni_db -f docker/postgres/init.sql
+      - name: Verify explicit Flyway baseline and legacy upgrade
+        env:
+          FLYWAY_BASELINE_ON_MIGRATE: "true"
+        run: |
+          chmod +x mvnw
+          ./mvnw -B --no-transfer-progress clean verify
   frontend-build:
     runs-on: ubuntu-latest
     defaults:
