@@ -30,7 +30,7 @@ export const Register = () => {
 
   const validateStep2 = () => {
     if (!form.email.trim() || !form.email.includes('@')) { setError('Email válido é obrigatório'); return false; }
-    if (form.password.length < 8) { setError('Senha deve ter pelo menos 8 caracteres'); return false; }
+    if (form.password.length < 10 || form.password.length > 72) { setError('Senha deve ter entre 10 e 72 caracteres'); return false; }
     if (form.password !== form.confirmPassword) { setError('As senhas não coincidem'); return false; }
     setError(''); return true;
   };
@@ -173,7 +173,7 @@ export const Register = () => {
               <input value={form.email} onChange={(e) => set('email', e.target.value)} placeholder="joao@clinica.com" type="email" />
             </div>
             <div className="form-group">
-              <label>Senha * (mín. 8 caracteres)</label>
+              <label>Senha * (10–72 caracteres)</label>
               <input value={form.password} onChange={(e) => set('password', e.target.value)} placeholder="••••••••" type="password" />
             </div>
             <div className="form-group">
