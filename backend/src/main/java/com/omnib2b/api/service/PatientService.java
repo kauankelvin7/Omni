@@ -67,10 +67,4 @@ public class PatientService {
         patientRepository.delete(patient);
     }
 
-    @Transactional
-    public Patient updateTelegramChatId(UUID id, Long chatId) {
-        Patient patient = findById(id);
-        patient.setTelegramChatId(chatId);
-        return patientRepository.save(patient);
-    }
 }
