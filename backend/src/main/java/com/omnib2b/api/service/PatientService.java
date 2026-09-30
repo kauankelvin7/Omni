@@ -1,6 +1,7 @@
 package com.omnib2b.api.service;
 
 import com.omnib2b.api.domain.Patient;
+import com.omnib2b.api.core.tenant.TenantContext;
 import com.omnib2b.api.repository.AppointmentRepository;
 import com.omnib2b.api.repository.PatientRepository;
 import com.omnib2b.api.master.service.SecurityLogService;
@@ -21,22 +22,25 @@ public class PatientService {
 
     @Transactional(readOnly = true)
     public List<Patient> findAll() {
-        return patientRepository.findAll();
+        return patientRepository.findAllByTenantId(TenantContext.requireCurrentTenant());
     }
 
     @Transactional(readOnly = true)
     public Patient findById(UUID id) {
-        return patientRepository.findById(id)
+        return patientRepository.findByIdAndTenantId(id, TenantContext.requireCurrentTenant())
                 .orElseThrow(() -> new RuntimeException("Paciente nao encontrado"));
     }
 
     @Transactional
     public Patient create(Patient patient) {
-        if (gatingService != null && !gatingService.canAddPatient(com.omnib2b.api.core.tenant.TenantContext.getCurrentTenant())) {
+        UUID tenantId = TenantContext.requireCurrentTenant();
+        if (gatingService != null && !gatingService.canAddPatient(tenantId)) {
             throw new com.omnib2b.api.core.exception.SubscriptionLimitException(
                 "Limite de 100 pacientes atingido para o plano Starter. Por favor, faça o upgrade para o plano Pro para continuar."
             );
         }
+        // Ignore tenant_id in the request body; JWT identity is authoritative.
+        patient.setTenantId(tenantId);
         return patientRepository.save(patient);
     }
 
@@ -58,7 +62,7 @@ public class PatientService {
             securityLogService.log("LGPD_PATIENT_DELETE", patient.getEmail() != null ? patient.getEmail() : patient.getPhone(), null, "Patient deleted (ID: " + id + ")", true);
         }
 
-        appointmentRepository.deleteByPatientId(id);
+        appointmentRepository.deleteByPatientIdAndTenantId(id, TenantContext.requireCurrentTenant());
         patientRepository.delete(patient);
     }
 
