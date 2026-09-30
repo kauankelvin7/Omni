@@ -22,11 +22,24 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody AuthRequest request) {
-        return ResponseEntity.ok(authService.login(request));
+        try {
+            return ResponseEntity.ok(authService.login(request));
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.status(401).build();
+        }
     }
 
     @PostMapping("/refresh")
     public ResponseEntity<AuthResponse> refresh(@RequestBody java.util.Map<String, String> body) {
-        return ResponseEntity.ok(authService.refresh(body.get("token")));
+        String token = body.get("refreshToken");
+        if (token == null || token.isBlank()) {
+            return ResponseEntity.badRequest().build();
+        }
+        try {
+            return ResponseEntity.ok(authService.refresh(token));
+        } catch (RuntimeException ex) {
+            // Never disclose whether a refresh token is malformed, expired or revoked.
+            return ResponseEntity.status(401).build();
+        }
     }
 }

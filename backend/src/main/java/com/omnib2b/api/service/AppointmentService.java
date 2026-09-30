@@ -1,6 +1,7 @@
 package com.omnib2b.api.service;
 
 import com.omnib2b.api.domain.Appointment;
+import jakarta.persistence.EntityNotFoundException;
 import com.omnib2b.api.core.tenant.TenantContext;
 import com.omnib2b.api.domain.Patient;
 import com.omnib2b.api.repository.AppointmentRepository;
@@ -25,7 +26,7 @@ public class AppointmentService {
     @Transactional(readOnly = true)
     public Appointment findById(UUID id) {
         return appointmentRepository.findByIdAndTenantId(id, TenantContext.requireCurrentTenant())
-                .orElseThrow(() -> new RuntimeException("Agendamento nao encontrado"));
+                .orElseThrow(() -> new EntityNotFoundException("Agendamento nao encontrado"));
     }
 
     @Transactional

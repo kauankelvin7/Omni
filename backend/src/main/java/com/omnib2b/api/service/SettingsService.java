@@ -33,7 +33,7 @@ public class SettingsService {
     }
 
     public ClinicSettings updateSettings(ClinicSettings newSettings) {
-        UUID tenantId = TenantContext.getCurrentTenant();
+        UUID tenantId = TenantContext.requireCurrentTenant();
         ClinicSettings existing = repository.findByTenantId(tenantId).orElse(new ClinicSettings());
         existing.setTenantId(tenantId);
 

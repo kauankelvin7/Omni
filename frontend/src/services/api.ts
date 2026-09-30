@@ -4,6 +4,17 @@ import axios, { AxiosError } from 'axios';
 interface CacheEntry { data: unknown; expiresAt: number; }
 const cache = new Map<string, CacheEntry>();
 const CACHE_TTL = 30_000; // 30 seconds
+let lastAccessToken = localStorage.getItem('jwt_token');
+const cacheablePaths = ['/patients', '/appointments'];
+
+const readAccessToken = (): string | null => {
+  const token = localStorage.getItem('jwt_token');
+  if (lastAccessToken !== token) {
+    cache.clear();
+    lastAccessToken = token;
+  }
+  return token;
+};
 
 export const invalidateCache = (pattern?: string) => {
   if (!pattern) { cache.clear(); return; }
@@ -47,14 +58,15 @@ const api = axios.create({
 
 // Request interceptor — inject JWT + loading + cache hit
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('jwt_token');
+  const token = readAccessToken();
   if (token && config.headers) {
     config.headers.Authorization = `Bearer ${token}`;
   }
 
   // Cache check for safe methods
-  if (config.method === 'get' && config.url) {
-    const cached = getCached(config.url);
+  if (config.method === 'get' && config.url && token &&
+      cacheablePaths.some((p) => config.url === p || config.url?.startsWith(p + '/'))) {
+    const cached = getCached(token + ':' + config.url);
     if (cached !== null) {
       // axios-cache-hit: abort the real request and return cached data
       config.adapter = () =>
@@ -82,9 +94,11 @@ api.interceptors.response.use(
     // Cache successful GET responses for cacheable paths
     const url = response.config.url;
     const method = response.config.method;
-    const cacheablePaths = ['/patients', '/appointments'];
-    if (method === 'get' && url && cacheablePaths.some((p) => url.includes(p))) {
-      cache.set(url, { data: response.data, expiresAt: Date.now() + CACHE_TTL });
+    const token = readAccessToken();
+    if (method === 'get' && url && token &&
+        cacheablePaths.some((p) => url === p || url.startsWith(p + '/')) &&
+        response.config.headers?.Authorization === `Bearer ${token}`) {
+      cache.set(token + ':' + url, { data: response.data, expiresAt: Date.now() + CACHE_TTL });
     }
 
     return response;
@@ -95,28 +109,31 @@ api.interceptors.response.use(
     const originalRequest = error.config as typeof error.config & { _retry?: boolean };
     const status = error.response?.status;
 
-    // Auto-refresh mechanism for 401
-    if (status === 401 && !originalRequest._retry) {
+    // Only a dedicated, signed and unexpired refresh token can extend a session.
+    // Requests to public endpoints must not redirect away during registration/login.
+    const isProtected = originalRequest &&
+      !['/auth/login', '/auth/refresh', '/tenants/register'].includes(originalRequest.url ?? '');
+    if (status === 401 && originalRequest && !originalRequest._retry && isProtected) {
       originalRequest._retry = true;
       try {
-        const token = localStorage.getItem('jwt_token');
-        if (token) {
-          const res = await axios.post(`${api.defaults.baseURL}/auth/refresh`, { token });
-          if (res.data.token) {
+        const refreshToken = sessionStorage.getItem('jwt_refresh_token');
+        if (refreshToken) {
+          const res = await axios.post(`${api.defaults.baseURL}/auth/refresh`, { refreshToken });
+          if (res.data.token && res.data.refreshToken) {
             localStorage.setItem('jwt_token', res.data.token);
-            if (originalRequest.headers) {
-              originalRequest.headers.Authorization = `Bearer ${res.data.token}`;
-            }
+            sessionStorage.setItem('jwt_refresh_token', res.data.refreshToken);
+            invalidateCache();
+            if (originalRequest.headers) originalRequest.headers.Authorization = `Bearer ${res.data.token}`;
             return api(originalRequest);
           }
         }
       } catch {
-        // refresh failed, fall through to redirect
+        // Expired/revoked refresh credentials require reauthentication.
       }
-
       localStorage.removeItem('jwt_token');
+      sessionStorage.removeItem('jwt_refresh_token');
+      invalidateCache();
       if (window.location.pathname !== '/login') {
-        // Save intended route before redirecting
         sessionStorage.setItem('redirectAfterLogin', window.location.pathname);
         window.location.href = '/login';
       }
@@ -128,6 +145,8 @@ api.interceptors.response.use(
       const msg = (error.response?.data as { message?: string })?.message;
       if (!msg || msg.toLowerCase().includes('token')) {
         localStorage.removeItem('jwt_token');
+        sessionStorage.removeItem('jwt_refresh_token');
+        invalidateCache();
         if (window.location.pathname !== '/login') {
           window.location.href = '/login';
         }

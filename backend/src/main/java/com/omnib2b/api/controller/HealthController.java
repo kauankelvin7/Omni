@@ -40,7 +40,6 @@ public class HealthController {
         } catch (Exception e) {
             response.put("database", "disconnected");
             response.put("status", "DOWN");
-            response.put("error", e.getMessage());
             return ResponseEntity.status(503).body(response);
         }
 

@@ -3,10 +3,14 @@ name: Backend tenant security
 on:
   push:
     branches:
-      - fix/tenant-isolation-and-db-config
+      - main
+      - 'audit/**'
   pull_request:
     paths:
       - "backend/**"
+      - "frontend/**"
+      - "bots/**"
+      - "render.yaml"
       - "docker-compose.yml"
       - "docker-compose.prod.yml"
       - ".github/workflows/backend-tenant-security.yml"
@@ -43,8 +47,8 @@ jobs:
       run:
         working-directory: backend
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: "17"
@@ -54,3 +58,34 @@ jobs:
         run: |
           chmod +x mvnw
           ./mvnw -B --no-transfer-progress clean verify
+  frontend-build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install and typecheck/build frontend
+        run: |
+          npm ci
+          npm run build
+
+  python-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Compile all bot modules
+        run: python -m compileall -q bots
+      - name: Install bot dependencies
+        run: python -m pip install -r bots/requirements.txt
+      - name: Run standard-library bot regression tests
+        run: python -m unittest discover -s bots/tests -p 'test_*.py' -v
+

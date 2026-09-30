@@ -39,7 +39,7 @@ Nunca comite senhas ou JWT Secrets para o GitHub. Estas variáveis residem na ta
 *   `DATABASE_USER=postgres.[project_id]`
 *   `DATABASE_PASSWORD=<senha-forte>`
 *   `JWT_SECRET=<chave-base64-de-pelo-menos-256-bits>` (Trocar periodicamente)
-*   `SEED_SECRET=<chave-para-seed-master>`
+*   `MASTER_JWT_SECRET=<chave-diferente-do-jwt-clínico>`
 *   `MASTER_EMAIL=admin@omni.com.br`
 *   `MASTER_PASSWORD=<senha-forte-para-acesso-master>` (Recomendado Bcrypt salt antes)
 *   `ALLOWED_ORIGINS=https://omni-b2b.vercel.app` (Crucial para CORS seguro)
@@ -51,8 +51,8 @@ Nunca comite senhas ou JWT Secrets para o GitHub. Estas variáveis residem na ta
 
 ## 🛡️ 3. Segurança e Performance
 
-*   **Taxa Limite (Rate Limiting):** Aplicada via Interceptor (`RateLimitInterceptor.java`) configurado com Bucket4j. Atualmente afeta primariamente rotas `/login` e de tokens para previnir brute-force.
-*   **Security Headers:** A aplicação inclui nativamente (Spring Security / `SecurityHeadersFilter.java`) cabeçalhos XSS Protection, HSTS, Content-Security-Policy e Frame-Options (DENY para prevenção contra UI redress/Clickjacking).
+*   **Taxa limite:** `RateLimitInterceptor` fornece apenas uma proteção **por instância e em memória** para login, registro e refresh. Não usa Bucket4j e não substitui rate limiting distribuído/na borda em produção.
+*   **Security Headers:** A API aplica `SecurityHeadersFilter.java` cabeçalhos XSS Protection, HSTS, Content-Security-Policy e Frame-Options (DENY para prevenção contra UI redress/Clickjacking).
 *   **Compressão GZIP:** Habilitado nativamente no application.yml do Spring Boot (min 2KB) cobrindo JSON, reduzindo payload na rede e tempo de transferência do Render para a Vercel.
 *   **Conexões BD (HikariCP):** O tamanho máximo do pool (`maximum-pool-size`) deve estar ajustado em torno de 10 conexões por instância do backend no plano Free, considerando o gargalo primário no Render, não no Supabase. O Keep-Alive mínimo é de 30000ms.
 

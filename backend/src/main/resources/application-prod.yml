@@ -10,9 +10,9 @@ spring:
 
 jwt:
   secret: ${JWT_SECRET}
-  # No default secret in production!
+  refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800000}
 
 master:
-  seed-secret: ${SEED_SECRET}
+  jwt-secret: ${MASTER_JWT_SECRET:${JWT_SECRET}}
   email: ${MASTER_EMAIL}
   password: ${MASTER_PASSWORD}

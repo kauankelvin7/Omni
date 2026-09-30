@@ -1,6 +1,7 @@
 package com.omnib2b.api.core.config;
 
 import com.omnib2b.api.core.interceptor.JwtInterceptor;
+import com.omnib2b.api.core.interceptor.SubscriptionAccessInterceptor;
 import com.omnib2b.api.core.interceptor.MdcInterceptor;
 import com.omnib2b.api.master.interceptor.MasterAuthInterceptor;
 import com.omnib2b.api.master.interceptor.RateLimitInterceptor;
@@ -14,6 +15,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class WebMvcConfig implements WebMvcConfigurer {
 
     private final JwtInterceptor jwtInterceptor;
+    private final SubscriptionAccessInterceptor subscriptionAccessInterceptor;
     private final MasterAuthInterceptor masterAuthInterceptor;
     private final RateLimitInterceptor rateLimitInterceptor;
     private final MdcInterceptor mdcInterceptor;
@@ -22,10 +24,12 @@ public class WebMvcConfig implements WebMvcConfigurer {
     private String allowedOrigins;
 
     public WebMvcConfig(JwtInterceptor jwtInterceptor,
+                        SubscriptionAccessInterceptor subscriptionAccessInterceptor,
                         MasterAuthInterceptor masterAuthInterceptor,
                         RateLimitInterceptor rateLimitInterceptor,
                         MdcInterceptor mdcInterceptor) {
         this.jwtInterceptor = jwtInterceptor;
+        this.subscriptionAccessInterceptor = subscriptionAccessInterceptor;
         this.masterAuthInterceptor = masterAuthInterceptor;
         this.rateLimitInterceptor = rateLimitInterceptor;
         this.mdcInterceptor = mdcInterceptor;
@@ -49,7 +53,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
         // Rate limiting — must be second
         registry.addInterceptor(rateLimitInterceptor)
-                .addPathPatterns("/auth/login", "/master/auth/login");
+                .addPathPatterns("/auth/login", "/master/auth/login", "/tenants/register", "/auth/refresh");
 
         // Clinic user JWT auth
         registry.addInterceptor(jwtInterceptor)
@@ -58,13 +62,23 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         "/auth/login", "/auth/refresh",
                         "/tenants/register",
                         "/master/**",
-                        "/actuator/**",
+                        "/actuator/health",
+                        "/health",
                         "/error"  // Allow default error responses
+                );
+
+        // After JWT validates tenant identity, enforce paid/trial lifecycle.
+        // Keep /subscription/me readable so suspended clinics can see their status.
+        registry.addInterceptor(subscriptionAccessInterceptor)
+                .addPathPatterns("/**")
+                .excludePathPatterns(
+                        "/auth/**", "/tenants/register", "/master/**",
+                        "/actuator/**", "/health", "/error", "/subscription/me"
                 );
 
         // Master panel JWT auth
         registry.addInterceptor(masterAuthInterceptor)
                 .addPathPatterns("/master/**")
-                .excludePathPatterns("/master/auth/login", "/master/admins/seed");
+                .excludePathPatterns("/master/auth/login");
     }
 }

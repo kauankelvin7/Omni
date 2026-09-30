@@ -20,7 +20,7 @@ public class SubscriptionController {
 
     @GetMapping("/me")
     public ResponseEntity<TenantSubscription> getMySubscription() {
-        UUID tenantId = TenantContext.getCurrentTenant();
+        UUID tenantId = TenantContext.requireCurrentTenant();
         return subscriptionRepository.findLatestByTenantId(tenantId)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());

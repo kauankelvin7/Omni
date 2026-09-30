@@ -69,8 +69,10 @@ cp backend/.env.example backend/.env
 cp bots/.env.example bots/.env
 cp bots/prospector/.env.example bots/prospector/.env
 cp frontend/.env.example frontend/.env
-# Gere uma chave exclusiva (openssl rand -hex 32) e configure JWT_SECRET
-# em backend/.env. Defina também MASTER_PASSWORD, SEED_SECRET e tokens necessários.
+# Gere duas chaves DIFERENTES (openssl rand -hex 32) e configure
+# JWT_SECRET e MASTER_JWT_SECRET em backend/.env.
+# Defina também MASTER_EMAIL/MASTER_PASSWORD apenas para o bootstrap master,
+# BOT_EMAIL/BOT_PASSWORD para a instância do bot e outros tokens necessários.
 # Não reutilize segredos de desenvolvimento em produção.
 ```
 
@@ -123,7 +125,7 @@ chmod +x start.sh && ./start.sh
 
 - **Frontend:** http://localhost:5173
 - **API:** http://localhost:8080
-- **Credenciais locais de desenvolvimento:** `admin@clinicateste.com` / `admin123` — não reutilize estas credenciais em produção.
+- **Primeiro acesso:** crie uma clínica em `/register` e faça login com as credenciais cadastradas. Não existe uma senha padrão da clínica.
 
 ## Estrutura do projeto
 
@@ -191,3 +193,16 @@ MIT License — veja o arquivo [LICENSE](./LICENSE)
 ---
 
 © 2026 Kauan Kelvin
+
+## Segurança e limites conhecidos
+
+- Após a atualização dos tokens JWT, as sessões anteriores precisam fazer login novamente.
+- Tokens de refresh têm validade finita, mas a revogação individual/rotação persistente
+  ainda requer armazenamento de sessões no servidor.
+- O rate limiter atual usa memória de cada instância; configure proteção adicional
+  no proxy/CDN antes de abrir o serviço publicamente.
+- O bot Telegram ainda é configurado por instância de clínica: não misture credenciais
+  de diferentes clínicas no mesmo processo.
+- Nunca use valores de exemplo como senhas, chaves ou variáveis de produção.
+
+Consulte [auditoria técnica](docs/AUDITORIA-2026-09-30.md) antes de um deploy real.

@@ -16,7 +16,7 @@ import java.util.Map;
 @Service
 public class MasterJwtService {
 
-    @Value("${jwt.secret:omnib2b-super-secret-key-that-needs-to-be-secure-for-hs256-signing}")
+    @Value("${master.jwt-secret}")
     private String secret;
 
     private static final long MASTER_EXPIRATION = 4 * 60 * 60 * 1000L; // 4 hours
@@ -28,6 +28,7 @@ public class MasterJwtService {
     public String generateMasterToken(Admin admin) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("role", "SUPER_ADMIN");
+        claims.put("token_type", "master");
         claims.put("admin_id", admin.getId().toString());
 
         return Jwts.builder()
@@ -39,29 +40,16 @@ public class MasterJwtService {
                 .compact();
     }
 
-    /**
-     * Generates a temporary impersonation token (1h) pretending to be a clinic admin.
-     */
-    public String generateImpersonationToken(java.util.UUID tenantId, java.util.UUID userId, String email) {
-        Map<String, Object> claims = new HashMap<>();
-        claims.put("tenant_id", tenantId.toString());
-        claims.put("user_id", userId.toString());
-        claims.put("impersonated", true);
-
-        return Jwts.builder()
-                .claims(claims)
-                .subject(email)
-                .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(new Date(System.currentTimeMillis() + 60 * 60 * 1000L)) // 1 hour
-                .signWith(getSigningKey())
-                .compact();
-    }
-
     public Claims parseToken(String token) {
-        return Jwts.parser()
+        Claims claims = Jwts.parser()
                 .verifyWith(getSigningKey())
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
+        if (!"master".equals(claims.get("token_type", String.class)) ||
+                !"SUPER_ADMIN".equals(claims.get("role", String.class))) {
+            throw new IllegalArgumentException("Não é um token de administrador");
+        }
+        return claims;
     }
 }
