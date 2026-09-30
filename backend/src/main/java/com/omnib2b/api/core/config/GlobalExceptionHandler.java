@@ -4,6 +4,8 @@ import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataAccessException;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.http.ResponseEntity;
@@ -35,6 +37,19 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleMissingTenant(IllegalStateException ex) {
         log.warn("Required request context missing");
         return error(401, "Sessão não autorizada.");
+    }
+
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<Map<String, Object>> handleHttpError(ResponseStatusException ex) {
+        return error(ex.getStatusCode().value(),
+                ex.getReason() == null ? "Requisição rejeitada" : ex.getReason());
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<Map<String, Object>> handleUniqueConstraint(DataIntegrityViolationException ex) {
+        // Do not echo SQL/constraint names or stored patient data.
+        log.warn("Data integrity conflict");
+        return error(409, "Registro duplicado ou conflito com dados existentes.");
     }
 
     @ExceptionHandler(DataAccessException.class)
