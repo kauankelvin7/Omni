@@ -18,6 +18,7 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: false
+    open-in-view: false
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
@@ -31,10 +32,12 @@ server:
 
 jwt:
   secret: ${JWT_SECRET}
-  expiration: ${JWT_EXPIRATION:86400000}
+  expiration: ${JWT_EXPIRATION:3600000}
+  refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800000}
 
 master:
-  seed-secret: ${SEED_SECRET:omni-seed-2026}
+  # Set MASTER_JWT_SECRET separately in production; fallback avoids interrupting existing deployments.
+  jwt-secret: ${MASTER_JWT_SECRET:${JWT_SECRET}}
   password: ${MASTER_PASSWORD}
   email: ${MASTER_EMAIL:kauan@omnib2b.com}
 
