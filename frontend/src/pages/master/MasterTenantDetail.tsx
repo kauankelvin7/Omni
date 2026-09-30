@@ -48,8 +48,9 @@ export const MasterTenantDetail = () => {
   const impersonate = async () => {
     if (!confirm('Entrar como esta clínica?')) return;
     const res = await masterApi.post(`/tenants/${id}/impersonate`);
+    sessionStorage.removeItem('jwt_refresh_token');
     localStorage.setItem('jwt_token', res.data.token);
-    window.open('/dashboard', '_blank');
+    window.open('/dashboard', '_blank', 'noopener,noreferrer');
   };
 
   const updateStatus = async (status: string) => {
