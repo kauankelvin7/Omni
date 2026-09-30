@@ -78,13 +78,14 @@ class ApiService:
             logger.error("Erro ao atualizar agendamento %s: %s", appointment_id, e)
             return False
 
-    def link_telegram_chat_id(self, patient_id: str, chat_id: int) -> bool:
-        """PATCH /patients/{id}/telegram — links a Telegram chat_id to a patient."""
+    def redeem_telegram_link(self, link_token: str, chat_id: int) -> bool:
+        """Redeem an expiring one-use link within this bot's authenticated clinic."""
         try:
-            self._request("PATCH", f"/patients/{patient_id}/telegram", json={"chatId": chat_id})
-            logger.info("chat_id %d vinculado ao paciente %s", chat_id, patient_id)
+            self._request("POST", "/patients/telegram/redeem",
+                          json={"token": link_token, "chatId": chat_id})
+            logger.info("Telegram linking completed for an authenticated clinic")
             return True
-        except requests.exceptions.RequestException as e:
-            logger.error("Erro ao vincular chat_id %d ao paciente %s: %s", chat_id, patient_id, e)
+        except requests.exceptions.RequestException:
+            # Never log the token, chat identifier or patient data.
+            logger.warning("Telegram linking request rejected or unavailable")
             return False
-
