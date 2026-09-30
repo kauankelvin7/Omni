@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Users, Plus, Copy, Check, Search, Edit2, Trash2, X, AlertCircle } from 'lucide-react';
 import { patientService, Patient, PatientPayload } from '../services/patient';
 
-const BOT_USERNAME = import.meta.env.VITE_BOT_USERNAME ?? 'omniB2Bbot';
+const BOT_USERNAME = import.meta.env.VITE_BOT_USERNAME ?? '';
 const PAGE_SIZE = 10;
 
 interface ModalProps {
@@ -124,16 +124,27 @@ const PatientModal = ({ initial, onClose, onSave }: ModalProps) => {
   );
 };
 
-const CopyButton = ({ text }: { text: string }) => {
+const CopyButton = ({ patientId, onError }: { patientId: string; onError: (message: string) => void }) => {
   const [copied, setCopied] = useState(false);
-  const copy = () => {
-    navigator.clipboard.writeText(text).then(() => {
+  const [busy, setBusy] = useState(false);
+  const copy = async () => {
+    if (!BOT_USERNAME || busy) return;
+    setBusy(true);
+    try {
+      // Every click issues a fresh single-use link. Patient UUIDs never become credentials.
+      const { token } = await patientService.createTelegramLink(patientId);
+      await navigator.clipboard.writeText(`https://t.me/${BOT_USERNAME}?start=${token}`);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    });
+    } catch {
+      onError('Não foi possível gerar o link seguro. Confira a conexão e as permissões de cópia.');
+    } finally {
+      setBusy(false);
+    }
   };
   return (
-    <button className="icon-btn" title="Copiar link de vínculo do Telegram" onClick={copy}>
+    <button className="icon-btn" title={BOT_USERNAME ? "Gerar e copiar link temporário do Telegram (30 min)" : "Configure VITE_BOT_USERNAME"}
+      aria-label="Gerar e copiar link temporário do Telegram" disabled={!BOT_USERNAME || busy} onClick={copy}>
       {copied ? <Check size={14} color="var(--linear-accent)" /> : <Copy size={14} />}
     </button>
   );
@@ -332,7 +343,7 @@ export const Patients = () => {
                         ) : (
                           <span className="badge badge-pending">Pendente</span>
                         )}
-                        <CopyButton text={`https://t.me/${BOT_USERNAME}?start=${p.id}`} />
+                        <CopyButton patientId={p.id} onError={setActionError} />
                       </div>
                     </td>
                     <td>
