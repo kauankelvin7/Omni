@@ -58,13 +58,14 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         "/auth/login", "/auth/refresh",
                         "/tenants/register",
                         "/master/**",
-                        "/actuator/**",
+                        "/actuator/health",
+                        "/health",
                         "/error"  // Allow default error responses
                 );
 
         // Master panel JWT auth
         registry.addInterceptor(masterAuthInterceptor)
                 .addPathPatterns("/master/**")
-                .excludePathPatterns("/master/auth/login", "/master/admins/seed");
+                .excludePathPatterns("/master/auth/login");
     }
 }
