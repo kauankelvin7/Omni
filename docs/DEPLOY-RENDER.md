@@ -56,7 +56,7 @@ Antes de fazer deploy, adicione TODAS essas variáveis:
 | SPRING_DATASOURCE_PASSWORD | sua_senha_supabase |
 | JWT_SECRET | resultado_do_openssl |
 | MASTER_PASSWORD | sua_senha_master_forte |
-| SEED_SECRET | omni-seed-2026 |
+| MASTER_JWT_SECRET | outra chave aleatória gerada separadamente |
 | ALLOWED_ORIGINS | https://omni-b2b.vercel.app |
 
 6. Clique "Deploy Web Service"
@@ -68,15 +68,14 @@ Antes de fazer deploy, adicione TODAS essas variáveis:
 curl https://omni-backend.onrender.com/actuator/health
 Deve retornar: {"status":"UP"}
 
-### 2.4 Criar o admin master
-curl -X POST https://omni-backend.onrender.com/master/admins/seed \
-  -H "Content-Type: application/json" \
-  -d '{
-    "seed_secret": "omni-seed-2026",
-    "email": "kauan@omnib2b.com",
-    "password": "SUA_SENHA_MASTER",
-    "name": "Kauan Kelvin"
-  }'
+### 2.4 Primeiro administrador master
+
+Configure `MASTER_EMAIL` e `MASTER_PASSWORD` **antes** do primeiro
+deploy: o serviço inicia `MasterAdminSeeder` e cria a conta somente se
+ela ainda não existir. O endpoint `/master/admins/seed` foi removido.
+Nunca reutilize o segredo de demonstração que constava em versões antigas
+da documentação. Use `MASTER_JWT_SECRET` diferente de `JWT_SECRET` quando
+configurar o serviço.
 
 ## ETAPA 3 — Deploy do Frontend (Vercel)
 
@@ -136,4 +135,4 @@ ficar ativo 24h). Opções:
 - Frontend: https://omni-b2b.vercel.app
 - Backend: https://omni-backend.onrender.com
 - Master: https://omni-b2b.vercel.app/master/login
-- GitHub: https://github.com/kauankelvin7/omni-b2b
+- GitHub: https://github.com/kauankelvin7/Omni
