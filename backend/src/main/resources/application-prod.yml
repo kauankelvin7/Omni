@@ -1,8 +1,11 @@
 spring:
   datasource:
-    url: ${DATABASE_URL:jdbc:postgresql://postgres:5432/omni_db}
-    username: ${DATABASE_USER:omni_user}
-    password: ${DATABASE_PASSWORD:omni_password}
+    # Render supplies separate DB_* variables; custom deployments may override with JDBC values.
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://${DB_HOST:postgres}:${DB_PORT:5432}/${DB_NAME:omni_db}}
+    username: ${SPRING_DATASOURCE_USERNAME:${DB_USER:omni_user}}
+    password: ${SPRING_DATASOURCE_PASSWORD:${DB_PASSWORD:}}
+  flyway:
+    baseline-on-migrate: ${FLYWAY_BASELINE_ON_MIGRATE:false}
   jpa:
     hibernate:
       ddl-auto: validate
@@ -13,6 +16,6 @@ jwt:
   refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800000}
 
 master:
-  jwt-secret: ${MASTER_JWT_SECRET:${JWT_SECRET}}
+  jwt-secret: ${MASTER_JWT_SECRET}
   email: ${MASTER_EMAIL}
   password: ${MASTER_PASSWORD}
