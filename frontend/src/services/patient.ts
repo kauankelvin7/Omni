@@ -35,6 +35,11 @@ export const patientService = {
     return response.data;
   },
 
+  createTelegramLink: async (id: string): Promise<{ token: string; expiresAt: string }> => {
+    const response = await api.post<{ token: string; expiresAt: string }>(`/patients/${id}/telegram-link`);
+    return response.data;
+  },
+
   delete: async (id: string): Promise<void> => {
     await api.delete(`/patients/${id}`);
   },
