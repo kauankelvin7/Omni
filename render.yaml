@@ -1,32 +1,56 @@
+# Render Blueprint for a NEW Omni deployment.
+# Existing services preserve old environment variables when syncing:
+# remove legacy non-JDBC SPRING_DATASOURCE_URL and inspect a DB backup
+# before opting in to Flyway baseline on an already populated database.
 services:
   - type: web
     name: omni-backend
-    env: java
-    buildCommand: cd backend && ./mvnw package -DskipTests
-    startCommand: java -jar backend/target/*.jar
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    healthCheckPath: /health
     envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
       - key: JWT_SECRET
         generateValue: true
-      - key: SEED_SECRET
+      - key: MASTER_JWT_SECRET
         generateValue: true
-      - key: SPRING_DATASOURCE_URL
+      - key: MASTER_EMAIL
+        sync: false
+      - key: MASTER_PASSWORD
+        sync: false
+      - key: ALLOWED_ORIGINS
+        sync: false
+      - key: DB_HOST
         fromDatabase:
           name: omni-postgres
-          property: connectionString
-      - key: SPRING_DATASOURCE_USERNAME
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: omni-postgres
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: omni-postgres
+          property: database
+      - key: DB_USER
         fromDatabase:
           name: omni-postgres
           property: user
-      - key: SPRING_DATASOURCE_PASSWORD
+      - key: DB_PASSWORD
         fromDatabase:
           name: omni-postgres
           property: password
 
   - type: web
     name: omni-frontend
-    env: static
+    runtime: static
     buildCommand: cd frontend && npm ci && npm run build
     staticPublishPath: frontend/dist
+    envVars:
+      - key: VITE_API_URL
+        sync: false
     routes:
       - type: rewrite
         source: /*
