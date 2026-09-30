@@ -93,7 +93,8 @@ def main() -> None:
         api=api,
         clinic_name=CLINIC_NAME,
         clinic_address=CLINIC_ADDRESS,
-        clinic_phone=CLINIC_PHONE
+        clinic_phone=CLINIC_PHONE,
+        timezone_name=CLINIC_TIMEZONE
     )
     for command_name, handler_fn in handlers.items():
         app.add_handler(CommandHandler(command_name, handler_fn))
