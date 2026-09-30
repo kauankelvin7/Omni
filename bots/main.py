@@ -3,6 +3,7 @@
 import logging
 import os
 import sys
+from zoneinfo import ZoneInfo
 
 from dotenv import load_dotenv
 from telegram.ext import ApplicationBuilder, CommandHandler, Application
@@ -33,6 +34,7 @@ BOT_PASSWORD = os.getenv("BOT_PASSWORD", "")
 CLINIC_NAME = os.getenv("CLINIC_NAME", "Sua Clínica")
 CLINIC_ADDRESS = os.getenv("CLINIC_ADDRESS", "Endereço da Clínica")
 CLINIC_PHONE = os.getenv("CLINIC_PHONE", "(00) 00000-0000")
+CLINIC_TIMEZONE = os.getenv("CLINIC_TIMEZONE", "America/Sao_Paulo")
 
 if not TELEGRAM_TOKEN:
     logger.critical("TELEGRAM_BOT_TOKEN não configurado no .env — abortando.")
@@ -50,12 +52,12 @@ def main() -> None:
     api = ApiService(base_url=API_BASE_URL, email=BOT_EMAIL, password=BOT_PASSWORD)
 
     # ---- Scheduler (created here, started inside the running event loop) ----
-    scheduler = AsyncIOScheduler()
+    scheduler = AsyncIOScheduler(timezone=ZoneInfo(CLINIC_TIMEZONE))
 
     # ---- post_init / post_shutdown hooks — run inside the event loop ----
     async def on_startup(app: Application) -> None:
         async def bot_send_fn(chat_id: int, text: str) -> None:
-            await app.bot.send_message(chat_id=chat_id, text=text, parse_mode="Markdown")
+            await app.bot.send_message(chat_id=chat_id, text=text)
 
         scheduler.add_job(
             send_reminders,
@@ -67,6 +69,7 @@ def main() -> None:
                 "clinic_name": CLINIC_NAME,
                 "clinic_address": CLINIC_ADDRESS,
                 "bot_send_fn": bot_send_fn,
+                "timezone_name": CLINIC_TIMEZONE,
             },
         )
         scheduler.start()
