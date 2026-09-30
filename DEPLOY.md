@@ -58,22 +58,19 @@ _Nota: No Render, não é necessário gerenciar portas ou SSL; ambos são provid
 
 ---
 
-## Criando Tabela Master e Primeiro Administrador
+## Configurando o primeiro administrador master
 
-No primeiro deploy em produção, é necessário garantir a existência da tabela `admins` (a migration cuida disso) e injetar o master admin original. O sistema possui um endpoint seguro de "seed".
+A criação de administradores por endpoint público foi removida por segurança.
+Configure `MASTER_EMAIL` e `MASTER_PASSWORD` como variáveis privadas **antes**
+do primeiro início do backend. O `MasterAdminSeeder` cria somente a conta
+configurada caso ela ainda não exista.
 
-1. Encontre a URL base da sua API em produção (ex: `https://api.omni.sua-empresa.com`).
-2. Obtenha o `SEED_SECRET` que você configurou no ambiente de produção.
-3. Dispare uma requisição POST para o "seed":
+Configure também `JWT_SECRET` e `MASTER_JWT_SECRET` com chaves aleatórias
+**diferentes**, geradas separadamente (ex.: `openssl rand -hex 32`).
+Remover `MASTER_PASSWORD` após o primeiro bootstrap é permitido somente se
+a configuração Spring do ambiente aceitar variável vazia e não depender dela
+para iniciar. Não exponha um endpoint HTTP de seed.
 
-```bash
-curl -X POST https://api.omni.sua-empresa.com/master/admins/seed \
-  -H "Content-Type: application/json" \
-  -d '{
-    "seed_secret": "SEGREDO_DEFINIDO_NO_ENV_PROD",
-    "email": "SEU_LOGIN@MASTER.COM",
-    "password": "SUA_SENHA_FORTE_AQUI",
-    "name": "Kauan Kelvin"
-  }'
-```
-Após isso, remova momentaneamente a variável ou mude o `SEED_SECRET` para garantir que o endpoint fique inútil no futuro. Acesse o painel pelo frontend `/master/login`.
+Em novas implantações, consulte também
+[`docs/AUDITORIA-2026-09-30.md`](docs/AUDITORIA-2026-09-30.md)
+para limitações verificadas e etapas pendentes de infraestrutura.
