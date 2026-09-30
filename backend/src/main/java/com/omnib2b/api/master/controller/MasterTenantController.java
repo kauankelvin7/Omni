@@ -234,7 +234,7 @@ public class MasterTenantController {
     }
 
     private String getClientIp(HttpServletRequest request) {
-        String xff = request.getHeader("X-Forwarded-For");
-        return (xff != null && !xff.isBlank()) ? xff.split(",")[0].trim() : request.getRemoteAddr();
+        // The first X-Forwarded-For hop can be supplied by an attacker.
+        return request.getRemoteAddr();
     }
 }
