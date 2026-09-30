@@ -176,10 +176,24 @@ public class MasterTenantController {
         String newStatus = body.get("status");
         String currentPeriodEndStr = body.get("current_period_end");
 
+        if (newPlan != null && !Set.of("TRIAL", "STARTER", "PRO", "CLINIC_PLUS").contains(newPlan)) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Plano inválido"));
+        }
+        if (newStatus != null && !Set.of("TRIAL", "ACTIVE", "SUSPENDED", "CANCELLED").contains(newStatus)) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Status inválido"));
+        }
+        // Do not activate an already expired subscription, even if the caller
+        // supplied a syntactically correct date.
+        if ("ACTIVE".equals(newStatus) && (currentPeriodEndStr == null || currentPeriodEndStr.isBlank())
+                && (sub.getCurrentPeriodEnd() == null || !sub.getCurrentPeriodEnd().isAfter(OffsetDateTime.now()))) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Informe um vencimento futuro"));
+        }
+
         if (newPlan != null && !newPlan.isBlank()) {
             sub.setPlanName(newPlan);
             // Set price based on plan
             switch (newPlan) {
+                case "TRIAL": sub.setPrice(java.math.BigDecimal.ZERO); break;
                 case "STARTER": sub.setPrice(new java.math.BigDecimal("197.00")); break;
                 case "PRO": sub.setPrice(new java.math.BigDecimal("397.00")); break;
                 case "CLINIC_PLUS": sub.setPrice(new java.math.BigDecimal("797.00")); break;
@@ -190,7 +204,12 @@ public class MasterTenantController {
         
         if (currentPeriodEndStr != null && !currentPeriodEndStr.isBlank()) {
             try {
-                sub.setCurrentPeriodEnd(OffsetDateTime.parse(currentPeriodEndStr));
+                OffsetDateTime newEnd = OffsetDateTime.parse(currentPeriodEndStr);
+                if (("ACTIVE".equals(newStatus) || "ACTIVE".equals(sub.getStatus()))
+                        && !newEnd.isAfter(OffsetDateTime.now())) {
+                    return ResponseEntity.badRequest().body(Map.of("error", "A assinatura ativa exige vencimento futuro"));
+                }
+                sub.setCurrentPeriodEnd(newEnd);
             } catch (Exception e) {
                 return ResponseEntity.badRequest().body(Map.of("error", "Formato de current_period_end inválido. Use ISO-8601"));
             }
