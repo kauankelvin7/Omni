@@ -44,25 +44,24 @@ def create_handlers(api: ApiService, clinic_name: str, clinic_address: str, clin
     async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         """Handle /start command.
 
-        Supports deep linking: /start <patient_uuid>
+        Supports one-use deep linking: /start <random_link_token>
         """
         try:
             if update.effective_chat is None:
                 return
             chat_id = update.effective_chat.id
             raw_args = context.args
-            patient_id = None
+            link_token = None
 
             if raw_args and len(raw_args) >= 1:
-                patient_id = raw_args[0]
+                link_token = raw_args[0]
             elif update.message and update.message.text:
                 parts = update.message.text.split()
                 if len(parts) > 1:
-                    patient_id = parts[1]
+                    link_token = parts[1]
 
-            if patient_id:
-                logger.info("Deep link detectado — vinculando patient_id=%s a chat_id=%d", patient_id, chat_id)
-                success = api.link_telegram_chat_id(patient_id, chat_id)
+            if link_token:
+                success = api.redeem_telegram_link(link_token, chat_id)
                 if success:
                     await update.effective_chat.send_message(
                         f"✅ *Olá! Sua conta na {clinic_name} foi vinculada com sucesso.*\n\n"
