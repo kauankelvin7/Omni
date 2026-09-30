@@ -22,7 +22,11 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody AuthRequest request) {
-        return ResponseEntity.ok(authService.login(request));
+        try {
+            return ResponseEntity.ok(authService.login(request));
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.status(401).build();
+        }
     }
 
     @PostMapping("/refresh")
