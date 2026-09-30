@@ -16,6 +16,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 import java.util.List;
+import java.util.Locale;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class TenantService {
@@ -37,8 +40,9 @@ public class TenantService {
 
     @Transactional
     public void registerTenant(TenantRegisterRequest request) {
-        if (userRepository.findByEmailWithoutTenantFilter(request.getEmail()).isPresent()) {
-            throw new RuntimeException("Email já cadastrado");
+        String normalizedEmail = request.getEmail().trim().toLowerCase(Locale.ROOT);
+        if (userRepository.findByEmailWithoutTenantFilter(normalizedEmail).isPresent()) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Email já cadastrado");
         }
 
         // 1. Create Tenant
@@ -51,7 +55,7 @@ public class TenantService {
         User admin = new User();
         admin.setTenantId(tenantId);
         admin.setName(request.getClinicName() + " Admin");
-        admin.setEmail(request.getEmail());
+        admin.setEmail(normalizedEmail);
         admin.setPasswordHash(BCrypt.hashpw(request.getPassword(), BCrypt.gensalt()));
         admin.setRole("ADMIN");
         userRepository.save(admin);
@@ -60,7 +64,7 @@ public class TenantService {
         ClinicSettings settings = new ClinicSettings();
         settings.setTenantId(tenantId);
         settings.setName(request.getClinicName());
-        settings.setEmail(request.getEmail());
+        settings.setEmail(normalizedEmail);
         settings.setPhone(request.getPhone() != null ? request.getPhone() : "");
         settings.setOpenTime("08:00");
         settings.setCloseTime("18:00");
