@@ -49,7 +49,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
         // Rate limiting — must be second
         registry.addInterceptor(rateLimitInterceptor)
-                .addPathPatterns("/auth/login", "/master/auth/login");
+                .addPathPatterns("/auth/login", "/master/auth/login", "/tenants/register", "/auth/refresh");
 
         // Clinic user JWT auth
         registry.addInterceptor(jwtInterceptor)
