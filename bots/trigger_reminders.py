@@ -11,6 +11,8 @@ API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8080")
 BOT_EMAIL = os.getenv("BOT_EMAIL", "")
 BOT_PASSWORD = os.getenv("BOT_PASSWORD", "")
 CLINIC_NAME = os.getenv("CLINIC_NAME", "Sua Clínica")
+CLINIC_ADDRESS = os.getenv("CLINIC_ADDRESS", "")
+CLINIC_TIMEZONE = os.getenv("CLINIC_TIMEZONE", "America/Sao_Paulo")
 
 api = ApiService(base_url=API_BASE_URL, email=BOT_EMAIL, password=BOT_PASSWORD)
 
@@ -23,7 +25,9 @@ async def main():
     count = await send_reminders(
         api=api,
         clinic_name=CLINIC_NAME,
+        clinic_address=CLINIC_ADDRESS,
         bot_send_fn=bot_send_fn,
+        timezone_name=CLINIC_TIMEZONE,
     )
     print(f"\nTotal lembretes processados: {count}")
 
