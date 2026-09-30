@@ -1,6 +1,8 @@
 """Telegram command handlers for appointment confirmation workflow."""
 
 import logging
+from datetime import datetime
+from zoneinfo import ZoneInfo
 from telegram import Update
 from telegram.ext import ContextTypes
 
@@ -14,22 +16,29 @@ from utils.message_templates import (
 
 logger = logging.getLogger("OmniBot.handlers")
 
-# In-memory mapping: telegram chat_id -> latest appointment_id
-# In production, this would be a database or Redis cache
-_user_appointment_map: dict[int, str] = {}
+def latest_pending_appointment(appointments: list[dict], chat_id: int,
+                               timezone_name: str = "America/Sao_Paulo") -> dict | None:
+    """Resolve the pending appointment from persisted patient/chat data, not RAM."""
+    clinic_tz = ZoneInfo(timezone_name)
+    now = datetime.now(clinic_tz)
+    candidates = []
+    for apt in appointments:
+        patient = apt.get("patient") or {}
+        if str(patient.get("telegramChatId")) != str(chat_id) or apt.get("status") != "SCHEDULED":
+            continue
+        try:
+            starts_at = datetime.fromisoformat(apt["appointmentDate"].replace("Z", "+00:00"))
+            if starts_at.tzinfo is None:
+                starts_at = starts_at.replace(tzinfo=clinic_tz)
+            if starts_at.astimezone(clinic_tz) >= now:
+                candidates.append((starts_at, apt))
+        except (ValueError, KeyError, AttributeError):
+            continue
+    return min(candidates, key=lambda item: item[0])[1] if candidates else None
 
 
-def set_user_appointment(chat_id: int, appointment_id: str) -> None:
-    """Register the appointment currently being confirmed by a user."""
-    _user_appointment_map[chat_id] = appointment_id
-
-
-def get_user_appointment(chat_id: int) -> str | None:
-    """Get the appointment ID associated with a chat_id."""
-    return _user_appointment_map.get(chat_id)
-
-
-def create_handlers(api: ApiService, clinic_name: str, clinic_address: str, clinic_phone: str):
+def create_handlers(api: ApiService, clinic_name: str, clinic_address: str, clinic_phone: str,
+                    timezone_name: str = "America/Sao_Paulo"):
     """Factory that returns handler functions with injected dependencies."""
 
     async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -87,7 +96,8 @@ def create_handlers(api: ApiService, clinic_name: str, clinic_address: str, clin
             if update.effective_chat is None:
                 return
             chat_id = update.effective_chat.id
-            appointment_id = get_user_appointment(chat_id)
+            pending = latest_pending_appointment(api.get_appointments(), chat_id, timezone_name)
+            appointment_id = pending.get("id") if pending else None
 
             if not appointment_id:
                 await update.effective_chat.send_message(
