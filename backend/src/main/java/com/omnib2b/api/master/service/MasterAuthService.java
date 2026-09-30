@@ -2,12 +2,12 @@ package com.omnib2b.api.master.service;
 
 import com.omnib2b.api.auth.dto.AuthRequest;
 import com.omnib2b.api.auth.dto.AuthResponse;
+import com.omnib2b.api.auth.service.JwtService;
 import com.omnib2b.api.core.entity.User;
 import com.omnib2b.api.core.repository.UserRepository;
 import com.omnib2b.api.master.entity.Admin;
 import com.omnib2b.api.master.repository.AdminRepository;
 import org.mindrot.jbcrypt.BCrypt;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.OffsetDateTime;
@@ -21,22 +21,22 @@ public class MasterAuthService {
     private final AdminRepository adminRepository;
     private final UserRepository userRepository;
     private final MasterJwtService masterJwtService;
+    private final JwtService jwtService;
     private final MasterActionLogService actionLogService;
     private final SecurityLogService securityLogService;
-
-    @Value("${master.seed-secret:}")
-    private String seedSecret;
 
     public MasterAuthService(
             AdminRepository adminRepository,
             UserRepository userRepository,
             MasterJwtService masterJwtService,
+            JwtService jwtService,
             MasterActionLogService actionLogService,
             SecurityLogService securityLogService
     ) {
         this.adminRepository = adminRepository;
         this.userRepository = userRepository;
         this.masterJwtService = masterJwtService;
+        this.jwtService = jwtService;
         this.actionLogService = actionLogService;
         this.securityLogService = securityLogService;
     }
@@ -75,22 +75,8 @@ public class MasterAuthService {
         actionLogService.log(adminId, "IMPERSONATE", tenantId, ip,
                 Map.of("target_user", user.getEmail()));
 
-        String token = masterJwtService.generateImpersonationToken(tenantId, user.getId(), user.getEmail());
+        String token = jwtService.generateImpersonationToken(tenantId, user.getId(), user.getEmail());
         return new AuthResponse(token);
     }
 
-    public void seedAdmin(String providedSecret, String name, String email, String password) {
-        if (seedSecret.isEmpty() || !seedSecret.equals(providedSecret)) {
-            throw new RuntimeException("Seed secret inválido");
-        }
-        if (adminRepository.findByEmail(email).isPresent()) {
-            throw new RuntimeException("Admin já existe");
-        }
-
-        Admin admin = new Admin();
-        admin.setName(name);
-        admin.setEmail(email);
-        admin.setPasswordHash(BCrypt.hashpw(password, BCrypt.gensalt()));
-        adminRepository.save(admin);
-    }
 }
