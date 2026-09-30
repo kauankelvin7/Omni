@@ -19,6 +19,7 @@ export const Login = () => {
     try {
       const response = await authService.login({ email, password });
       localStorage.setItem('jwt_token', response.token);
+      sessionStorage.setItem('jwt_refresh_token', response.refreshToken);
       // Smart redirect: go to intended route if saved, otherwise dashboard
       const redirectTo = sessionStorage.getItem('redirectAfterLogin') || '/dashboard';
       sessionStorage.removeItem('redirectAfterLogin');
