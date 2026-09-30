@@ -60,7 +60,8 @@ public class PatientService {
         
         // LGPD: Log the deletion of personal data
         if (securityLogService != null) {
-            securityLogService.log("LGPD_PATIENT_DELETE", patient.getEmail() != null ? patient.getEmail() : patient.getPhone(), null, "Patient deleted (ID: " + id + ")", true);
+            securityLogService.log("LGPD_PATIENT_DELETE", null, null,
+                    "Patient record deleted (UUID: " + id + ")", true);
         }
 
         appointmentRepository.deleteByPatientIdAndTenantId(id, TenantContext.requireCurrentTenant());
