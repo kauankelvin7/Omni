@@ -5,11 +5,11 @@ def confirmation_message(patient_name: str, appointment_time: str, clinic_name: 
     """Mensagem de confirmação enviada 24h antes da consulta com tom amigável."""
     return (
         f"Olá {patient_name}, tudo bem? 😊\n\n"
-        f"Passando para lembrar que temos um horário reservado para você amanhã!\\n\n"
-        f"📅 *Data:* Amanhã\n"
-        f"🕒 *Horário:* {appointment_time}\n"
-        f"🏥 *Local:* {clinic_name}\n"
-        f"📍 *Endereço:* {clinic_address}\n\n"
+        f"Passando para lembrar que temos um horário reservado para você amanhã!\n\n"
+        f"📅 Data: Amanhã\n"
+        f"🕒 Horário: {appointment_time}\n"
+        f"🏥 Local: {clinic_name}\n"
+        f"📍 Endereço: {clinic_address}\n\n"
         f"Poderia nos confirmar se conseguirá comparecer?\n"
         f"Use /confirmar para garantir sua vaga ou /cancelar se precisar desmarcar."
     )
@@ -17,9 +17,9 @@ def confirmation_message(patient_name: str, appointment_time: str, clinic_name: 
 
 def confirmed_message(clinic_address: str) -> str:
     return (
-        "✅ *Excelente! Sua consulta está confirmada.*\n\n"
+        "✅ Excelente! Sua consulta está confirmada.\n\n"
         "Ficamos muito felizes em atendê-lo(a). Nos vemos amanhã!\n"
-        f"📍 *Lembrete do endereço:* {clinic_address}"
+        f"📍 Lembrete do endereço: {clinic_address}"
     )
 
 
@@ -34,7 +34,7 @@ def cancelled_message(clinic_name: str, clinic_phone: str) -> str:
 
 def reschedule_message(clinic_name: str, clinic_phone: str) -> str:
     return (
-        f"📅 Para escolher um novo horário na *{clinic_name}*, você pode:\n\n"
+        f"📅 Para escolher um novo horário na {clinic_name}, você pode:\n\n"
         f"1. Ligar ou enviar WhatsApp para {clinic_phone}\n"
         f"2. Acessar nosso sistema de agendamento online.\n\n"
         "Estamos ansiosos para vê-lo(a) em breve!"
