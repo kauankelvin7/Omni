@@ -12,7 +12,7 @@ public interface UserRepository extends JpaRepository<User, UUID> {
 
     // Native query bypasses the Tenant @Filter, preventing tenant restrictions during login 
     // when the tenant_id is not yet known.
-    @Query(value = "SELECT * FROM users WHERE email = :email", nativeQuery = true)
+    @Query(value = "SELECT * FROM users WHERE LOWER(email) = LOWER(:email)", nativeQuery = true)
     Optional<User> findByEmailWithoutTenantFilter(@Param("email") String email);
 
     @Query(value = "SELECT * FROM users WHERE tenant_id = :tenantId LIMIT 1", nativeQuery = true)
