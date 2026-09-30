@@ -4,10 +4,11 @@ import com.omnib2b.api.auth.dto.AuthRequest;
 import com.omnib2b.api.auth.dto.AuthResponse;
 import com.omnib2b.api.core.entity.User;
 import com.omnib2b.api.core.repository.UserRepository;
+import io.jsonwebtoken.Claims;
 import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class AuthService {
@@ -21,29 +22,27 @@ public class AuthService {
     }
 
     public AuthResponse login(AuthRequest request) {
-        Optional<User> userOpt = userRepository.findByEmailWithoutTenantFilter(request.getEmail());
-        if (userOpt.isEmpty()) {
-            throw new RuntimeException("Credenciais invalidas");
-        }
+        // Do not allow tenant context from a previous request to affect login.
+        User user = userRepository.findByEmailWithoutTenantFilter(request.getEmail().trim())
+                .orElseThrow(() -> new IllegalArgumentException("Credenciais inválidas"));
 
-        User user = userOpt.get();
         if (!BCrypt.checkpw(request.getPassword(), user.getPasswordHash())) {
-            throw new RuntimeException("Credenciais invalidas");
+            throw new IllegalArgumentException("Credenciais inválidas");
         }
-
-        String token = jwtService.generateToken(user);
-        return new AuthResponse(token);
+        return new AuthResponse(jwtService.generateToken(user), jwtService.generateRefreshToken(user));
     }
 
-    public AuthResponse refresh(String token) {
-        String userIdStr = jwtService.extractUserIdFromExpiredToken(token);
-        if (userIdStr == null) {
-            throw new RuntimeException("Refresh token inválido");
+    public AuthResponse refresh(String refreshToken) {
+        // Expired access tokens are NEVER accepted to mint another session.
+        Claims claims = jwtService.parseRefreshToken(refreshToken);
+        UUID userId = UUID.fromString(claims.get("user_id", String.class));
+        UUID tenantId = UUID.fromString(claims.get("tenant_id", String.class));
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Credenciais inválidas"));
+        if (!tenantId.equals(user.getTenantId()) ||
+                !user.getEmail().equals(claims.getSubject())) {
+            throw new IllegalArgumentException("Sessão inválida");
         }
-        User user = userRepository.findById(java.util.UUID.fromString(userIdStr))
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado para refresh token"));
-
-        String newToken = jwtService.generateToken(user);
-        return new AuthResponse(newToken);
+        return new AuthResponse(jwtService.generateToken(user), jwtService.generateRefreshToken(user));
     }
 }
