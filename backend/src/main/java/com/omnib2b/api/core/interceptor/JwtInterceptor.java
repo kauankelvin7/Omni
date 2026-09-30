@@ -40,7 +40,7 @@ public class JwtInterceptor implements HandlerInterceptor {
         try {
             Claims claims = jwtService.parseToken(token);
             String tenantIdStr = claims.get("tenant_id", String.class);
-            String userId = claims.getSubject();
+            String userId = claims.get("user_id", String.class);
 
             // Protected clinic routes must have a signed tenant claim.
             // Never derive or override tenancy using caller-controlled request headers.
