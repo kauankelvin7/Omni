@@ -1,6 +1,7 @@
 package com.omnib2b.api.service;
 
 import com.omnib2b.api.domain.Patient;
+import jakarta.persistence.EntityNotFoundException;
 import com.omnib2b.api.core.tenant.TenantContext;
 import com.omnib2b.api.repository.AppointmentRepository;
 import com.omnib2b.api.repository.PatientRepository;
@@ -28,7 +29,7 @@ public class PatientService {
     @Transactional(readOnly = true)
     public Patient findById(UUID id) {
         return patientRepository.findByIdAndTenantId(id, TenantContext.requireCurrentTenant())
-                .orElseThrow(() -> new RuntimeException("Paciente nao encontrado"));
+                .orElseThrow(() -> new EntityNotFoundException("Paciente nao encontrado"));
     }
 
     @Transactional
