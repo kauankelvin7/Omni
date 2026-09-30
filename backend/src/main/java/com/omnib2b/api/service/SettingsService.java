@@ -17,10 +17,11 @@ public class SettingsService {
     }
 
     public ClinicSettings getSettings() {
-        UUID tenantId = TenantContext.getCurrentTenant();
+        UUID tenantId = TenantContext.requireCurrentTenant();
         return repository.findByTenantId(tenantId)
                 .orElseGet(() -> {
                     ClinicSettings defaultSettings = new ClinicSettings();
+                    defaultSettings.setTenantId(tenantId);
                     defaultSettings.setName("Minha Clínica (Edite aqui)");
                     defaultSettings.setEmail("contato@clinica.com");
                     defaultSettings.setPhone("(11) 99999-9999");
@@ -34,7 +35,8 @@ public class SettingsService {
     public ClinicSettings updateSettings(ClinicSettings newSettings) {
         UUID tenantId = TenantContext.getCurrentTenant();
         ClinicSettings existing = repository.findByTenantId(tenantId).orElse(new ClinicSettings());
-        
+        existing.setTenantId(tenantId);
+
         existing.setName(newSettings.getName());
         existing.setEmail(newSettings.getEmail());
         existing.setPhone(newSettings.getPhone());

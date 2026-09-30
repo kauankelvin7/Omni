@@ -30,6 +30,12 @@
 - Landing page profissional com planos de assinatura
 - Design system inspirado no Linear
 
+## Isolamento entre clínicas
+
+O backend obtém o `tenant_id` exclusivamente de um **JWT assinado e validado** nas rotas de clínica. O cabeçalho enviado pelo navegador `X-Tenant-ID` não controla o contexto. Leituras e exclusões de pacientes/agendamentos usam filtros explícitos por `tenant_id`, e operações de criação atribuem o ID do contexto autenticado, ignorando valores vindos no corpo da requisição.
+
+O PostgreSQL local usa `omni_db` (mesmo nome do Docker Compose e da configuração Spring). O `JWT_SECRET` é obrigatório: não há mais uma chave pública de fallback. Esses controles não substituem uma auditoria de produção e testes de integração completos.
+
 ## Stack
 
 | Camada   | Tecnologia                   |
@@ -59,10 +65,13 @@ cd Omni
 ### 2. Configure as variáveis de ambiente
 
 ```bash
+cp backend/.env.example backend/.env
 cp bots/.env.example bots/.env
 cp bots/prospector/.env.example bots/prospector/.env
 cp frontend/.env.example frontend/.env
-# Preencha os tokens necessários em cada .env
+# Gere uma chave exclusiva (openssl rand -hex 32) e configure JWT_SECRET
+# em backend/.env. Defina também MASTER_PASSWORD, SEED_SECRET e tokens necessários.
+# Não reutilize segredos de desenvolvimento em produção.
 ```
 
 ### 3. Suba o banco de dados
@@ -75,6 +84,7 @@ docker compose up -d
 
 ```bash
 cd backend
+set -a; source .env; set +a
 ./mvnw spring-boot:run
 ```
 

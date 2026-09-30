@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: ${DATABASE_URL:jdbc:postgresql://db:5432/omni_db}
+    url: ${DATABASE_URL:jdbc:postgresql://postgres:5432/omni_db}
     username: ${DATABASE_USER:omni_user}
     password: ${DATABASE_PASSWORD:omni_password}
   jpa:

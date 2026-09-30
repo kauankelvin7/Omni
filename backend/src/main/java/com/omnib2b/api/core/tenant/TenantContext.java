@@ -9,6 +9,14 @@ public class TenantContext {
         return CURRENT_TENANT.get();
     }
 
+    public static UUID requireCurrentTenant() {
+        UUID tenantId = getCurrentTenant();
+        if (tenantId == null) {
+            throw new IllegalStateException("Authenticated tenant context is required");
+        }
+        return tenantId;
+    }
+
     public static void setCurrentTenant(UUID tenantId) {
         CURRENT_TENANT.set(tenantId);
     }

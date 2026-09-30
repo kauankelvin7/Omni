@@ -16,7 +16,7 @@ import java.util.Map;
 @Service
 public class JwtService {
 
-    @Value("${jwt.secret:omnib2b-super-secret-key-that-needs-to-be-secure-for-hs256-signing}")
+    @Value("${jwt.secret}")
     private String secret;
 
     @Value("${jwt.expiration:86400000}") // 1 day in ms

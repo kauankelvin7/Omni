@@ -22,6 +22,8 @@ public class JwtInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+        // Never carry the previous request's tenant into a new request on the same thread.
+        TenantContext.clear();
         if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
             return true;
         }
@@ -38,18 +40,23 @@ public class JwtInterceptor implements HandlerInterceptor {
         try {
             Claims claims = jwtService.parseToken(token);
             String tenantIdStr = claims.get("tenant_id", String.class);
-            String userId = claims.getSubject();
+            String userId = claims.get("user_id", String.class);
 
-            if (tenantIdStr != null) {
-                TenantContext.setCurrentTenant(UUID.fromString(tenantIdStr));
-                MDC.put("tenantId", tenantIdStr.substring(0, 8));
+            // Protected clinic routes must have a signed tenant claim.
+            // Never derive or override tenancy using caller-controlled request headers.
+            if (tenantIdStr == null || tenantIdStr.isBlank() || userId == null || userId.isBlank()) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                return false;
             }
-            if (userId != null) {
-                MDC.put("userId", userId.length() > 8 ? userId.substring(0, 8) : userId);
-            }
+
+            UUID tenantId = UUID.fromString(tenantIdStr);
+            TenantContext.setCurrentTenant(tenantId);
+            MDC.put("tenantId", tenantIdStr.substring(0, 8));
+            MDC.put("userId", userId.length() > 8 ? userId.substring(0, 8) : userId);
 
             return true;
         } catch (Exception e) {
+            TenantContext.clear();
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             return false;
         }
